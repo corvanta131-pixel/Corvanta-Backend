@@ -77,6 +77,17 @@ See `.env.example` for the supported variables. All local placeholders are safe 
 
 ## Notes
 
-This is a Phase 1 foundation. The architecture is designed to scale toward AI agents, customer conversations, knowledge retrieval, and multi-tenant administration.
+## Stage D: secure AI conversations
+
+Stage D adds a provider-agnostic conversation workflow without external AI calls:
+
+- `AIProvider`/`AIService` normalize requests (`systemPrompt`, `messages`, `context`, `temperature`, `maxTokens`) and responses (text/content, provider/model, usage, finish reason, and request ID). The deterministic mock provider is the default.
+- `KnowledgeRetriever` only searches published, non-deleted documents in active, non-deleted knowledge bases belonging to the authenticated company and the selected agent.
+- `contextBuilder` keeps system instructions, bounded history, retrieved knowledge, and current user content as separate inputs.
+- `messageService` and `aiConversationService` enforce company scope for every conversation, customer, agent, knowledge base, document, and message lookup. Provider failures become controlled API errors and never expose raw provider errors.
+- `POST /api/v1/conversations/:conversationId/messages` requires `conversations:send`; `GET /api/v1/conversations/:conversationId/messages` requires `conversations:messages:read`. Public message creation accepts only `user` or `customer` sender types; assistant/system messages are server-generated.
+- Agent configuration supports `provider`, `temperature`, `maxTokens`, `responseConfig`, and `fallbackConfig`; credentials are intentionally not stored in agents.
+
+Stage D intentionally defers streaming, embeddings/vector search, external provider credentials, tool/function calling, and asynchronous generation queues. Configure limits and the mock provider with the `AI_*` variables in `.env.example`.
 # Corvanta-Backend
 # Corvanta-Backend

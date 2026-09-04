@@ -12,7 +12,10 @@ function getCompanyScope(companyId) {
 async function listKnowledgeDocuments(companyId, filters = {}) {
   const query = { ...getCompanyScope(companyId), isDeleted: false };
   if (filters.status) query.status = filters.status;
-  if (filters.knowledgeBaseId) query.knowledgeBaseId = filters.knowledgeBaseId;
+  if (filters.knowledgeBaseId) {
+    validateObjectId(filters.knowledgeBaseId, "knowledgeBaseId");
+    query.knowledgeBaseId = filters.knowledgeBaseId;
+  }
   return KnowledgeDocument.find(query).sort({ createdAt: -1 }).lean();
 }
 

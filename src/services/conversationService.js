@@ -1,6 +1,7 @@
 const Conversation = require("../models/Conversation");
 const Customer = require("../models/Customer");
 const AIAgent = require("../models/AIAgent");
+const User = require("../models/User");
 const AppError = require("../utils/AppError");
 const { validateObjectId } = require("../validators/commonValidator");
 
@@ -9,11 +10,27 @@ function getCompanyScope(companyId) {
   return { companyId };
 }
 
+async function validateParticipants(companyId, participantIds) {
+  if (participantIds === undefined) return;
+  if (!Array.isArray(participantIds)) throw new AppError(400, "participantIds must be an array.");
+  for (const participantId of participantIds) {
+    validateObjectId(participantId, "participantId");
+  }
+  const count = await User.countDocuments({ _id: { $in: participantIds }, companyId, isDeleted: false });
+  if (count !== participantIds.length) throw new AppError(403, "One or more participants do not belong to your company.");
+}
+
 async function listConversations(companyId, filters = {}) {
   const query = { ...getCompanyScope(companyId), isDeleted: false };
   if (filters.status) query.status = filters.status;
-  if (filters.customerId) query.customerId = filters.customerId;
-  if (filters.agentId) query.agentId = filters.agentId;
+  if (filters.customerId) {
+    validateObjectId(filters.customerId, "customerId");
+    query.customerId = filters.customerId;
+  }
+  if (filters.agentId) {
+    validateObjectId(filters.agentId, "agentId");
+    query.agentId = filters.agentId;
+  }
   return Conversation.find(query).sort({ updatedAt: -1 }).lean();
 }
 
@@ -25,6 +42,7 @@ async function getConversationById(companyId, conversationId) {
 }
 
 async function createConversation(companyId, payload) {
+  await validateParticipants(companyId, payload.participantIds);
   if (payload.customerId) {
     validateObjectId(payload.customerId, "customerId");
     // Verify customer belongs to this company
@@ -60,6 +78,7 @@ async function createConversation(companyId, payload) {
 
 async function updateConversation(companyId, conversationId, payload) {
   const conversation = await getConversationById(companyId, conversationId);
+  await validateParticipants(companyId, payload.participantIds);
   
   if (payload.customerId) {
     validateObjectId(payload.customerId, "customerId");

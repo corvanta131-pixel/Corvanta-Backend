@@ -3,6 +3,9 @@ const { validateConversationInput } = require("../validators/domainValidator");
 const { validateObjectId } = require("../validators/commonValidator");
 const { logAudit } = require("../services/auditService");
 const { listConversations, getConversationById, createConversation, updateConversation, deleteConversation } = require("../services/conversationService");
+const { listMessages } = require("../services/messageService");
+const { sendConversationMessage } = require("../services/aiConversationService");
+const { validateMessageInput } = require("../validators/domainValidator");
 
 exports.listConversations = asyncHandler(async (req, res) => {
   const conversations = await listConversations(req.user.companyId, req.query || {});
@@ -35,4 +38,22 @@ exports.deleteConversation = asyncHandler(async (req, res) => {
   const conversation = await deleteConversation(req.user.companyId, req.params.id);
   await logAudit({ user: req.user, companyId: req.user.companyId, action: "conversation.deleted", entityType: "Conversation", entityId: String(conversation._id) });
   res.status(200).json({ success: true, message: "Conversation deleted successfully.", data: conversation });
+});
+
+exports.listConversationMessages = asyncHandler(async (req, res) => {
+  validateObjectId(req.params.conversationId, "conversationId");
+  const messages = await listMessages(req.user.companyId, req.params.conversationId, req.query || {});
+  res.status(200).json({ success: true, data: messages });
+});
+
+exports.sendConversationMessage = asyncHandler(async (req, res) => {
+  validateObjectId(req.params.conversationId, "conversationId");
+  validateMessageInput(req.body, { publicEndpoint: true });
+  const result = await sendConversationMessage(
+    req.user.companyId,
+    req.params.conversationId,
+    req.body,
+    req.user
+  );
+  res.status(201).json({ success: true, message: "Message sent successfully.", data: result });
 });

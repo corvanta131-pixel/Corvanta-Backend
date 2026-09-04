@@ -50,7 +50,14 @@ function validateAIAgentInput(payload = {}, { isUpdate = false } = {}) {
   validateRequiredString(payload.name, "Agent name", 2, 120);
   validateOptionalString(payload.description, "Description", 0, 2000);
   validateOptionalString(payload.model, "Model", 2, 120);
+  validateOptionalString(payload.provider, "Provider", 2, 50);
   validateOptionalString(payload.promptTemplate, "Prompt template", 0, 20000);
+  if (payload.temperature !== undefined && (typeof payload.temperature !== "number" || payload.temperature < 0 || payload.temperature > 2)) {
+    throw new AppError(400, "Temperature must be a number between 0 and 2.");
+  }
+  if (payload.maxTokens !== undefined && (!Number.isInteger(payload.maxTokens) || payload.maxTokens < 1 || payload.maxTokens > 32768)) {
+    throw new AppError(400, "maxTokens must be an integer between 1 and 32768.");
+  }
   validateEnumValue(payload.status, ["draft", "active", "disabled", "archived"], "status");
 }
 
@@ -80,11 +87,20 @@ function validateConversationInput(payload = {}, { isUpdate = false } = {}) {
   validateEnumValue(payload.status, ["open", "waiting", "resolved", "archived"], "status");
 }
 
-function validateMessageInput(payload = {}, { isUpdate = false } = {}) {
+function validateMessageInput(payload = {}, { isUpdate = false, publicEndpoint = false } = {}) {
   rejectProtectedFieldOverrides(payload);
+  const protectedMessageField = ["senderId", "conversationId", "metadata"].find((field) =>
+    Object.prototype.hasOwnProperty.call(payload, field)
+  );
+  if (protectedMessageField) {
+    throw new AppError(400, `${protectedMessageField} cannot be supplied by the client.`);
+  }
 
   validateRequiredString(payload.body, "Message body", 1, 20000);
   validateEnumValue(payload.senderType, ["user", "customer", "agent", "system"], "senderType");
+  if (publicEndpoint && payload.senderType && !["user", "customer"].includes(payload.senderType)) {
+    throw new AppError(400, "Only user or customer messages can be submitted.");
+  }
 }
 
 function validateAttachmentInput(payload = {}, { isUpdate = false } = {}) {

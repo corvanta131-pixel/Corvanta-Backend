@@ -33,9 +33,35 @@ const aiAgentSchema = new mongoose.Schema(
       type: String,
       default: "gpt-4o-mini",
     },
+    provider: {
+      type: String,
+      default: "mock",
+      trim: true,
+      lowercase: true,
+    },
+    temperature: {
+      type: Number,
+      min: 0,
+      max: 2,
+      default: 0.2,
+    },
+    maxTokens: {
+      type: Number,
+      min: 1,
+      max: 32768,
+      default: 512,
+    },
     promptTemplate: {
       type: String,
       default: "",
+    },
+    responseConfig: {
+      type: Object,
+      default: {},
+    },
+    fallbackConfig: {
+      type: Object,
+      default: {},
     },
     ownerId: {
       type: mongoose.Schema.Types.ObjectId,

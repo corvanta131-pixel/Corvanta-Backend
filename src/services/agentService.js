@@ -37,6 +37,9 @@ async function createAgent(companyId, payload) {
   }
 
   // Validate each knowledgeBaseId belongs to same company
+  if (payload.knowledgeBaseIds !== undefined && !Array.isArray(payload.knowledgeBaseIds)) {
+    throw new AppError(400, "knowledgeBaseIds must be an array.");
+  }
   if (payload.knowledgeBaseIds && Array.isArray(payload.knowledgeBaseIds) && payload.knowledgeBaseIds.length > 0) {
     for (const kbId of payload.knowledgeBaseIds) {
       validateObjectId(kbId, "knowledgeBaseId");
@@ -52,7 +55,12 @@ async function createAgent(companyId, payload) {
     description: payload.description,
     status: payload.status,
     model: payload.model,
+    provider: payload.provider || "mock",
+    temperature: payload.temperature,
+    maxTokens: payload.maxTokens,
     promptTemplate: payload.promptTemplate,
+    responseConfig: payload.responseConfig || {},
+    fallbackConfig: payload.fallbackConfig || {},
     ownerId: payload.ownerId || null,
     knowledgeBaseIds: payload.knowledgeBaseIds || [],
     metadata: payload.metadata || {},
@@ -83,6 +91,9 @@ async function updateAgent(companyId, agentId, payload) {
   }
 
   // Validate each knowledgeBaseId belongs to same company
+  if (payload.knowledgeBaseIds !== undefined && !Array.isArray(payload.knowledgeBaseIds)) {
+    throw new AppError(400, "knowledgeBaseIds must be an array.");
+  }
   if (payload.knowledgeBaseIds && Array.isArray(payload.knowledgeBaseIds) && payload.knowledgeBaseIds.length > 0) {
     for (const kbId of payload.knowledgeBaseIds) {
       validateObjectId(kbId, "knowledgeBaseId");
@@ -93,7 +104,7 @@ async function updateAgent(companyId, agentId, payload) {
     }
   }
 
-  const allowedFields = ["name", "description", "status", "model", "promptTemplate", "ownerId", "knowledgeBaseIds", "metadata"];
+  const allowedFields = ["name", "description", "status", "model", "provider", "temperature", "maxTokens", "promptTemplate", "responseConfig", "fallbackConfig", "ownerId", "knowledgeBaseIds", "metadata"];
   for (const field of allowedFields) {
     if (payload[field] !== undefined) agent[field] = payload[field];
   }
