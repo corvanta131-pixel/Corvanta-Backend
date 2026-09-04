@@ -32,6 +32,28 @@ const userSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    employeeCode: {
+      type: String,
+      trim: true,
+      default: "",
+      index: true,
+    },
+    department: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    title: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    managerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
     status: {
       type: String,
       enum: ["active", "invited", "disabled"],
@@ -57,7 +79,9 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+userSchema.index({ companyId: 1, email: 1 }, { unique: true, sparse: true });
 userSchema.index({ companyId: 1, status: 1 });
+userSchema.index({ companyId: 1, department: 1, createdAt: -1 });
 
 userSchema.methods.toPublicJSON = function toPublicJSON() {
   const userObject = this.toObject();
