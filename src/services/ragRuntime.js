@@ -1,6 +1,7 @@
 const config = require("../config/config");
-const { createEmbeddingProvider } = require("./ai/embeddingProvider");
 const { createVectorStore } = require("./vectorStore");
+const { createPersistentVectorStore } = require("./persistentVectorStore");
+const { createEmbeddingProvider } = require("./ai/embeddingProvider");
 
 const RAG_HOLDER = {
   embeddingProvider: null,
@@ -28,7 +29,13 @@ function getEmbeddingProvider(overrides = {}) {
 function getVectorStore(overrides = {}) {
   if (overrides.vectorStore) return overrides.vectorStore;
   if (!RAG_HOLDER.vectorStore) {
-    RAG_HOLDER.vectorStore = createVectorStore(config.AI_VECTOR_STORE || "memory", {});
+    const name = config.AI_VECTOR_STORE || "memory";
+    const normalized = String(name || "memory").toLowerCase();
+    if (normalized === "persistent-mongodb" || normalized === "persistent" || normalized === "") {
+      RAG_HOLDER.vectorStore = createPersistentVectorStore("persistent-mongodb", {});
+    } else {
+      RAG_HOLDER.vectorStore = createVectorStore(name, {});
+    }
   }
   return RAG_HOLDER.vectorStore;
 }

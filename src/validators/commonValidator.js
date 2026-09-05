@@ -50,6 +50,10 @@ function rejectProtectedFieldOverrides(payload = {}) {
     "updatedAt",
     "passwordHash",
     "lastLoginAt",
+    "indexingState",
+    "chunkCount",
+    "indexingError",
+    "lastIndexedAt",
   ];
 
   const attemptedField = protectedFields.find((field) => Object.prototype.hasOwnProperty.call(payload, field));

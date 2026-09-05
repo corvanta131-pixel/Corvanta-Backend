@@ -90,7 +90,9 @@ Stage D adds a provider-agnostic conversation workflow without external AI calls
 
 Stage D intentionally defers streaming, embeddings/vector search, external provider credentials, tool/function calling, and asynchronous generation queues. Configure limits and the mock provider with the `AI_*` variables in `.env.example`.
 
-## Stage E: production RAG foundation
+## Stage E: production RAG foundation for production RAG
+
+## Stage F: production-oriented RAG architecture
 
 Stage E upgrades the Stage D foundation toward a production-quality RAG pipeline while remaining provider-agnostic and tenant-isolated. It does **not** deploy production infrastructure; it builds the application-layer architecture that can later be connected to AWS/vector infrastructure without rewriting the business layer.
 
@@ -160,6 +162,68 @@ Stage E adds structural defenses (untrusted-knowledge wrapping, explicit "data n
 ### Explicitly deferred (not in Stage E)
 
 The following are intentionally **not** built in Stage E and remain future work: AWS infrastructure, EC2, S3, Docker, Terraform, Kubernetes, WebSockets, streaming responses, frontend, billing, email/Resend, Cloudinary, queues, production observability platforms, CI/CD redesign, and any production vector database. The `VectorStore` and `EmbeddingProvider` abstractions are designed to be replaceable with AWS/managed implementations without changing the business layer.
+
+## Stage F: production-oriented RAG architecture
+
+Stage F moves Corvanta's RAG foundation from a synchronous/in-memory prototype toward a production-oriented architecture. The goal is NOT to deploy the entire application to AWS yet; rather, it establishes the application architecture needed for persistent vector storage, asynchronous knowledge ingestion, reliable ingestion lifecycle/state management, retry-safe processing, concurrency protection, provider-independent embeddings, production-oriented retrieval, and observability.
+
+### What Stage F adds
+
+- **IngestionJob model.** Tenant-scoped job tracking with states: pending, processing, indexed, index_failed. Records document ID, company ID, KB ID, attempt count, processing duration, embedding provider/model/dimensions, chunk/vector counts, and structured error metadata.
+- **Queue abstraction.** `Queue`/`InMemoryQueue` defines `enqueue`, `dequeue`, `ack`, `retry`, `fail`, `size`, `close`, and `registerHandler`. Designed to be swappable with AWS SQS, BullMQ, or Redis later without changing the business layer. `createQueue(name)` returns the appropriate adapter.
+- **Worker pattern.** `ingestionWorker.js` exposes `processIngestionJob` and `startIngestionWorker`. The worker processes jobs from the queue through the chunk → embed → persist → mark pipeline.
+- **Concurrency protection.** Ingestion is idempotent by design: the existing `InMemoryVectorStore` implementation is keyed deterministically by `(companyId, knowledgeBaseId, documentId, chunkId)` so concurrent ingestion of the same document cannot create duplicate vectors. The `KnowledgeChunk` model has a unique compound index on `(companyId, knowledgeDocumentId, chunkIndex)` that guarantees re-indexing does not produce duplicate chunks. The ingestion service checks for an existing pending `IngestionJob` before starting a new one.
+- **PersistentVectorStore.** `persistentVectorStore.js` implements the `VectorStore` interface using MongoDB as the backing store. This replaces the `InMemoryVectorStore` for the persistent path. The `VectorStore` abstraction means any production vector database (Pinecone, Weaviate, Chroma, AWS OpenSearch) can be swapped in later by implementing the same interface.
+- **Retrieval re-validation.** The semantic retriever validates every vector-store result against the live MongoDB document record — checking `isDeleted`, `status` (must be "published"), and KB status — before returning it. A stale vector in the store for a deleted, archived, or draft document will never surface in retrieval results.
+- **Document lifecycle hooks.** Deleting a document sets `indexingState = "unindexed"` and `chunkCount = 0`. The `removeDocumentFromIndex` call also purges vectors from the store. Updating a document's status to draft/archived does not automatically unindex (clients must call DELETE /index to explicitly remove from the vector index).
+- **Retry-safe ingestion.** The `IngestionJob` model tracks `attemptCount` and `maxAttempts` (default 3). Failed ingestion marks the document `index_failed` with a structured error. The `retryIngestion` function resets the state and submits a new job.
+- **Structured observability.** `IngestionJob` records: `jobId`, `documentId`, `companyId`, `knowledgeBaseId`, `status`, `attemptCount`, `maxAttempts`, `startedAt`, `completedAt`, `processingDurationMs`, `chunkCount`, `vectorCount`, `embeddingProvider`, `embeddingModel`, `embeddingDimensions`, `embeddingUsage`, `errorCode`, `errorMessage`. No API keys, access tokens, passwords, or raw secrets are ever stored or logged.
+
+### Configuration
+
+New environment variables (all in `.env.example`):
+
+- `AI_VECTOR_STORE` (default `memory`; set to `persistent-mongodb` for the persistent store)
+
+### Architecture
+
+```
+Document
+  → ingestion request
+  → IngestionJob (pending)
+  → worker picks up job
+  → chunk
+  → embed (via EmbeddingProvider)
+  → persist vectors (via VectorStore)
+  → mark indexed
+  → IngestionJob (indexed or index_failed)
+```
+
+The queue and worker are local-process by default. The queue abstraction supports plugging in AWS SQS, BullMQ, or Redis by implementing the same interface without changing the business layer.
+
+### Security considerations
+
+- Tenant isolation is enforced at every layer: the vector store (both in-memory and persistent) refuses cross-company reads, the retriever re-validates chunks against the database, and both `IngestionJob` and `KnowledgeChunk` are indexed on `companyId`.
+- The retriever never returns chunks from deleted knowledge bases, deleted documents, draft documents, or archived documents — even if a stale vector exists in the store.
+- Protected field overrides are rejected at the validator layer: `companyId`, `isDeleted`, `indexingState`, `jobId`, `attemptCount`, and protected timestamps cannot be supplied by the client.
+- All job metadata (documentId, companyId, embedding provider/model, chunk counts, error codes) is stored server-side only. The client receives only the document state and a `jobId` for tracking.
+
+### Limitations (not production-ready)
+
+- The `InMemoryQueue` is process-local. It does not survive server restarts or share state across multiple instances. It is suitable for development and testing only.
+- The `PersistentVectorStore` uses MongoDB for storage but performs cosine-similarity search in-process. For production, a dedicated vector database (Pinecone, Weaviate, Chroma, AWS OpenSearch) should replace this adapter.
+- True distributed locking across multiple server instances is not implemented. The abstraction is designed for it, but the current implementation relies on MongoDB's document-level atomicity only.
+- The queue/worker runs in the same process as the API server. For production, the worker should be extracted into a separate process or service.
+
+### Future production infrastructure path
+
+The following can be introduced without rewriting the business layer:
+
+- **AWS SQS queue** — implement `Queue` interface with `@aws-sdk/client-sqs`
+- **AWS S3** — store raw document files before chunking
+- **Pinecone / Weaviate / Chroma** — implement `VectorStore` interface
+- **AWS Lambda / ECS worker** — extract `ingestionWorker` into a separate process
+- **OpenTelemetry** — add tracing to `IngestionJob` lifecycle
 
 # Corvanta-Backend
 # Corvanta-Backend

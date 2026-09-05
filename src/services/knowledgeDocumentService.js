@@ -96,6 +96,8 @@ async function deleteKnowledgeDocument(companyId, documentId) {
   const document = await getKnowledgeDocumentById(companyId, documentId);
   document.isDeleted = true;
   document.deletedAt = new Date();
+  document.indexingState = "unindexed";
+  document.chunkCount = 0;
   await document.save();
   return document;
 }

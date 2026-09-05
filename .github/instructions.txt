@@ -1,17 +1,23 @@
-Stage E audit is accepted.
+Stage F is approved for commit pending one final lightweight verification.
 
-Do one final lightweight verification only. Do NOT perform another audit and do NOT modify application code.
+Do NOT audit again.
+Do NOT modify any files.
+Do NOT commit.
+Do NOT push.
 
-Run:
+Run only:
 
 1. `git status`
 2. `git diff --check`
 3. `node --test`
-4. Confirm the final result is 100 passed / 0 failed.
-5. Show me `git diff --stat`.
+4. `git diff --stat`
 
-Do NOT commit.
-Do NOT push.
-Do NOT modify files.
+Confirm:
 
-Then stop and report the results.
+* 135 tests pass
+* 0 failures
+* diff-check exit 0
+
+Also confirm `.env` is NOT among the files being committed.
+
+Then stop.
