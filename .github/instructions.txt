@@ -1,0 +1,17 @@
+Stage E audit is accepted.
+
+Do one final lightweight verification only. Do NOT perform another audit and do NOT modify application code.
+
+Run:
+
+1. `git status`
+2. `git diff --check`
+3. `node --test`
+4. Confirm the final result is 100 passed / 0 failed.
+5. Show me `git diff --stat`.
+
+Do NOT commit.
+Do NOT push.
+Do NOT modify files.
+
+Then stop and report the results.

@@ -27,12 +27,35 @@ const config = {
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || "development-placeholder-cloud-key",
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || "development-placeholder-cloud-secret",
   AI_API_KEY: process.env.AI_API_KEY || "development-placeholder-ai-key",
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY || "development-placeholder-openai-key",
+  OPENAI_ORGANIZATION: process.env.OPENAI_ORGANIZATION || "",
   AI_PROVIDER: process.env.AI_PROVIDER || "mock",
   AI_PROVIDER_TIMEOUT_MS: Number(process.env.AI_PROVIDER_TIMEOUT_MS || 10000),
   AI_HISTORY_MESSAGE_LIMIT: Number(process.env.AI_HISTORY_MESSAGE_LIMIT || 20),
   AI_CONTEXT_DOCUMENT_LIMIT: Number(process.env.AI_CONTEXT_DOCUMENT_LIMIT || 5),
   AI_CONTEXT_MAX_CHARS: Number(process.env.AI_CONTEXT_MAX_CHARS || 12000),
   AI_MESSAGE_LIST_LIMIT: Number(process.env.AI_MESSAGE_LIST_LIMIT || 50),
+  AI_MAX_OUTPUT_TOKENS: Number(process.env.AI_MAX_OUTPUT_TOKENS || 1024),
+  AI_ALLOWED_PROVIDERS: (process.env.AI_ALLOWED_PROVIDERS || "mock,openai")
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean),
+  AI_ALLOWED_GENERATION_MODELS: (process.env.AI_ALLOWED_GENERATION_MODELS
+    || "mock-model,gpt-4o-mini,gpt-4o,gpt-4.1-mini,gpt-3.5-turbo")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean),
+  AI_ALLOWED_EMBEDDING_MODELS: (process.env.AI_ALLOWED_EMBEDDING_MODELS
+    || "mock-embedding-model,text-embedding-3-small,text-embedding-3-large")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean),
+  AI_DEFAULT_EMBEDDING_MODEL: process.env.AI_DEFAULT_EMBEDDING_MODEL || "text-embedding-3-small",
+  AI_DEFAULT_EMBEDDING_DIMENSIONS: Number(process.env.AI_DEFAULT_EMBEDDING_DIMENSIONS || 1536),
+  AI_EMBEDDING_PROVIDER: process.env.AI_EMBEDDING_PROVIDER || "mock",
+  CHUNK_SIZE_CHARS: Number(process.env.CHUNK_SIZE_CHARS || 1200),
+  CHUNK_OVERLAP_CHARS: Number(process.env.CHUNK_OVERLAP_CHARS || 200),
+  CHUNK_MAX_CHARS: Number(process.env.CHUNK_MAX_CHARS || 4000),
   API_RATE_LIMIT_WINDOW_MS: Number(process.env.API_RATE_LIMIT_WINDOW_MS || 60000),
   API_RATE_LIMIT_MAX: Number(process.env.API_RATE_LIMIT_MAX || 120),
   AUTH_RATE_LIMIT_WINDOW_MS: Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS || 600000),
@@ -56,6 +79,7 @@ function validateStartupConfig() {
       "development-placeholder-cloud-key",
       "development-placeholder-cloud-secret",
       "development-placeholder-ai-key",
+      "development-placeholder-openai-key",
     ];
 
     for (const placeholder of placeholders) {
@@ -67,6 +91,7 @@ function validateStartupConfig() {
         config.CLOUDINARY_API_KEY,
         config.CLOUDINARY_API_SECRET,
         config.AI_API_KEY,
+        config.OPENAI_API_KEY,
       ].includes(placeholder)) {
         throw new Error("Production validation failed: replace development placeholder values before starting in production.");
       }

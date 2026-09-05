@@ -29,9 +29,27 @@ const knowledgeDocumentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["draft", "published", "archived"],
+      enum: ["draft", "published", "archived", "indexing", "indexed", "index_failed"],
       default: "draft",
       index: true,
+    },
+    indexingState: {
+      type: String,
+      enum: ["unindexed", "pending", "indexing", "indexed", "index_failed"],
+      default: "unindexed",
+      index: true,
+    },
+    indexingError: {
+      type: String,
+      default: "",
+    },
+    lastIndexedAt: {
+      type: Date,
+      default: null,
+    },
+    chunkCount: {
+      type: Number,
+      default: 0,
     },
     tags: [{
       type: String,

@@ -6,6 +6,7 @@ const userRoutes = require("./userRoutes");
 const customerRoutes = require("./customerRoutes");
 const agentRoutes = require("./agentRoutes");
 const knowledgeBaseRoutes = require("./knowledgeBaseRoutes");
+const knowledgeBaseSearchRoutes = require("./knowledgeBaseSearchRoutes");
 const knowledgeDocumentRoutes = require("./knowledgeDocumentRoutes");
 const conversationRoutes = require("./conversationRoutes");
 
@@ -18,6 +19,7 @@ router.use("/users", userRoutes);
 router.use("/customers", customerRoutes);
 router.use("/agents", agentRoutes);
 router.use("/knowledge-bases", knowledgeBaseRoutes);
+router.use("/knowledge-bases", knowledgeBaseSearchRoutes);
 router.use("/knowledge-documents", knowledgeDocumentRoutes);
 router.use("/conversations", conversationRoutes);
 

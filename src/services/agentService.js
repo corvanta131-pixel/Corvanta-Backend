@@ -3,6 +3,8 @@ const AppError = require("../utils/AppError");
 const { validateObjectId } = require("../validators/commonValidator");
 const User = require("../models/User");
 const KnowledgeBase = require("../models/KnowledgeBase");
+const { validateAgentRuntimeConfig } = require("./ai/agentConfigValidator");
+const config = require("../config/config");
 
 function getCompanyScope(companyId) {
   if (!companyId) throw new AppError(403, "Missing company context.");
@@ -50,12 +52,16 @@ async function createAgent(companyId, payload) {
     }
   }
 
+  const finalProvider = payload.provider !== undefined ? payload.provider : "mock";
+  const finalModel = payload.model !== undefined ? payload.model : (finalProvider === "mock" ? "mock-model" : config.AI_ALLOWED_GENERATION_MODELS[0]);
+  validateAgentRuntimeConfig({ provider: finalProvider, model: finalModel, temperature: payload.temperature, maxTokens: payload.maxTokens });
+
   const agent = await AIAgent.create({
     name: payload.name,
     description: payload.description,
     status: payload.status,
-    model: payload.model,
-    provider: payload.provider || "mock",
+    model: finalModel,
+    provider: finalProvider,
     temperature: payload.temperature,
     maxTokens: payload.maxTokens,
     promptTemplate: payload.promptTemplate,
@@ -108,6 +114,7 @@ async function updateAgent(companyId, agentId, payload) {
   for (const field of allowedFields) {
     if (payload[field] !== undefined) agent[field] = payload[field];
   }
+  validateAgentRuntimeConfig(agent);
   await agent.save();
   return agent;
 }

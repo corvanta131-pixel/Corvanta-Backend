@@ -103,6 +103,33 @@ function validateMessageInput(payload = {}, { isUpdate = false, publicEndpoint =
   }
 }
 
+function validateKnowledgeSearchInput(payload = {}) {
+  rejectProtectedFieldOverrides(payload);
+  validateRequiredString(payload.query, "Search query", 1, 2000);
+  if (payload.knowledgeBaseIds !== undefined && !Array.isArray(payload.knowledgeBaseIds)) {
+    throw new AppError(400, "knowledgeBaseIds must be an array.");
+  }
+  if (Array.isArray(payload.knowledgeBaseIds) && payload.knowledgeBaseIds.length > 50) {
+    throw new AppError(400, "knowledgeBaseIds may contain at most 50 entries.");
+  }
+  if (payload.limit !== undefined && (!Number.isInteger(payload.limit) || payload.limit < 1 || payload.limit > 50)) {
+    throw new AppError(400, "limit must be an integer between 1 and 50.");
+  }
+}
+
+function validateKnowledgeIndexInput(payload = {}) {
+  rejectProtectedFieldOverrides(payload);
+  if (payload.knowledgeBaseIds !== undefined && !Array.isArray(payload.knowledgeBaseIds)) {
+    throw new AppError(400, "knowledgeBaseIds must be an array.");
+  }
+  if (payload.chunkSize !== undefined && (!Number.isInteger(payload.chunkSize) || payload.chunkSize < 64 || payload.chunkSize > 8000)) {
+    throw new AppError(400, "chunkSize must be an integer between 64 and 8000.");
+  }
+  if (payload.chunkOverlap !== undefined && (!Number.isInteger(payload.chunkOverlap) || payload.chunkOverlap < 0 || payload.chunkOverlap > 4000)) {
+    throw new AppError(400, "chunkOverlap must be an integer between 0 and 4000.");
+  }
+}
+
 function validateAttachmentInput(payload = {}, { isUpdate = false } = {}) {
   rejectProtectedFieldOverrides(payload);
 
@@ -122,4 +149,6 @@ module.exports = {
   validateConversationInput,
   validateMessageInput,
   validateAttachmentInput,
+  validateKnowledgeSearchInput,
+  validateKnowledgeIndexInput,
 };

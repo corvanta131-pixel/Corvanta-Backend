@@ -12,15 +12,30 @@ async function getOwnedConversation(companyId, conversationId) {
   return conversation;
 }
 
+const ALLOWED_USAGE_KEYS = ["promptTokens", "completionTokens", "totalTokens", "inputTokens", "outputTokens"];
+const FORBIDDEN_METADATA_KEYS = ["apiKey", "authorization", "api_key", "secret", "password", "token", "credential", "credentials"];
+
+function sanitizeUsage(usage) {
+  if (!usage || typeof usage !== "object") return usage;
+  const out = {};
+  for (const key of ALLOWED_USAGE_KEYS) {
+    if (usage[key] !== undefined) out[key] = Number(usage[key]);
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
 function publicMessage(message) {
   const value = message.toObject ? message.toObject() : { ...message };
   const metadata = value.metadata || {};
+  for (const key of FORBIDDEN_METADATA_KEYS) delete metadata[key];
   const safeMetadata = {
-    usage: metadata.usage,
+    usage: sanitizeUsage(metadata.usage),
     provider: metadata.provider,
     model: metadata.model,
     latencyMs: metadata.latencyMs,
     finishReason: metadata.finishReason,
+    retrievalMode: metadata.retrievalMode,
+    sourceCount: metadata.sourceCount,
   };
   Object.keys(safeMetadata).forEach((key) => safeMetadata[key] === undefined && delete safeMetadata[key]);
   return {

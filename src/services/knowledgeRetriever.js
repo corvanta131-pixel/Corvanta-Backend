@@ -1,8 +1,10 @@
 const KnowledgeBase = require("../models/KnowledgeBase");
 const KnowledgeDocument = require("../models/KnowledgeDocument");
+const KnowledgeChunk = require("../models/KnowledgeChunk");
 const AppError = require("../utils/AppError");
 const { validateObjectId } = require("../validators/commonValidator");
 const config = require("../config/config");
+const { createEmbeddingProvider } = require("./ai/embeddingProvider");
 
 function tokens(value) {
   return String(value || "").toLowerCase().match(/[a-z0-9]{2,}/g) || [];
@@ -48,11 +50,92 @@ async function retrieveKnowledge({ companyId, knowledgeBaseIds = [], query = "",
 
   return ranked.slice(0, Math.max(0, Math.min(Number(limit) || 0, 50))).map((document) => ({
     id: document._id,
+    knowledgeDocumentId: document._id,
     knowledgeBaseId: document.knowledgeBaseId,
     title: document.title,
     content: document.content || document.summary || "",
     score: document.score,
   }));
+}
+
+async function retrieveKnowledgeSemantic({
+  companyId,
+  knowledgeBaseIds = [],
+  query = "",
+  limit = config.AI_CONTEXT_DOCUMENT_LIMIT,
+  options = {},
+} = {}) {
+  if (!companyId) throw new AppError(403, "Missing company context.");
+  const ids = await validateKnowledgeBases(companyId, knowledgeBaseIds);
+  if (!ids.length) return [];
+  const embeddingProvider = options.embeddingProvider || createEmbeddingProvider(
+    options.embeddingProviderName || config.AI_EMBEDDING_PROVIDER,
+    {
+      apiKey: options.embeddingApiKey,
+      model: options.embeddingModel || config.AI_DEFAULT_EMBEDDING_MODEL,
+      dimensions: options.embeddingDimensions || config.AI_DEFAULT_EMBEDDING_DIMENSIONS,
+      timeoutMs: options.embeddingTimeoutMs || config.AI_PROVIDER_TIMEOUT_MS,
+    }
+  );
+  const vectorStore = options.vectorStore;
+  if (!vectorStore) throw new AppError(503, "Vector store is not configured.");
+  const max = Math.max(0, Math.min(Number(limit) || 0, 50));
+  if (!max) return [];
+
+  let embedding;
+  try {
+    embedding = await embeddingProvider.generateEmbedding(query);
+  } catch (error) {
+    throw new AppError(502, "Embedding generation failed.");
+  }
+
+  const matches = await vectorStore.search({
+    companyId,
+    vector: embedding.vector,
+    limit: max,
+    knowledgeBaseIds: ids,
+  });
+  if (!matches.length) return [];
+
+  const chunkIds = matches.map((match) => match.chunkId);
+  const chunks = await KnowledgeChunk.find({
+    _id: { $in: chunkIds },
+    companyId,
+    isDeleted: false,
+  })
+    .select("_id knowledgeBaseId knowledgeDocumentId chunkIndex content metadata")
+    .lean();
+  const byId = new Map(chunks.map((chunk) => [String(chunk._id), chunk]));
+  const documentIds = [...new Set(chunks.map((chunk) => String(chunk.knowledgeDocumentId)))];
+  const documents = await KnowledgeDocument.find({
+    _id: { $in: documentIds },
+    companyId,
+    knowledgeBaseId: { $in: ids },
+    status: "published",
+    isDeleted: false,
+  })
+    .select("_id knowledgeBaseId title")
+    .lean();
+  const docById = new Map(documents.map((doc) => [String(doc._id), doc]));
+
+  return matches
+    .map((match) => {
+      const chunk = byId.get(String(match.chunkId));
+      if (!chunk) return null;
+      const document = docById.get(String(chunk.knowledgeDocumentId));
+      if (!document) return null;
+      return {
+        id: chunk._id,
+        chunkId: chunk._id,
+        knowledgeBaseId: chunk.knowledgeBaseId,
+        knowledgeDocumentId: chunk.knowledgeDocumentId,
+        documentTitle: document.title,
+        chunkIndex: chunk.chunkIndex,
+        content: chunk.content,
+        score: match.score,
+      };
+    })
+    .filter(Boolean);
 }
 
 class KnowledgeRetriever {
@@ -65,4 +148,9 @@ class KnowledgeRetriever {
   }
 }
 
-module.exports = { KnowledgeRetriever, retrieveKnowledge, validateKnowledgeBases };
+module.exports = {
+  KnowledgeRetriever,
+  retrieveKnowledge,
+  retrieveKnowledgeSemantic,
+  validateKnowledgeBases,
+};
