@@ -136,6 +136,10 @@ function createVectorStore(name = "memory", options = {}) {
   if (normalized === "memory" || normalized === "in-memory" || normalized === "") {
     return new InMemoryVectorStore(options);
   }
+  if (normalized === "pinecone") {
+    const { createPineconeVectorStore } = require("./providers/pineconeVectorStore");
+    return createPineconeVectorStore("pinecone", options);
+  }
   throw new Error(`Unsupported vector store: ${name}`);
 }
 
