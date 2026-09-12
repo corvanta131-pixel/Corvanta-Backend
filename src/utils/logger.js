@@ -34,8 +34,8 @@ function safeStringify(value) {
 const formatMessage = (level, ...args) => {
   const timestamp = new Date().toISOString();
   const message = args.map((arg) => {
-    if (typeof arg === "string") return arg;
-    if (arg instanceof Error) return arg.message;
+    if (typeof arg === "string") return redactValue(arg);
+    if (arg instanceof Error) return redactValue(arg.message);
     return safeStringify(arg);
   }).join(" ");
 

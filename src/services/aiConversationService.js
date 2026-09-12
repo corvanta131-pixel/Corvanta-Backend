@@ -21,7 +21,25 @@ function resolveAIService(agent, options) {
     model: agent.model,
     timeoutMs: config.AI_PROVIDER_TIMEOUT_MS,
   });
-  return createAIService(agent.provider, { provider, timeoutMs: config.AI_PROVIDER_TIMEOUT_MS });
+  return createAIService(agent.provider, {
+    provider,
+    timeoutMs: config.AI_PROVIDER_TIMEOUT_MS,
+    maxRetries: config.AI_MAX_RETRIES,
+    retryBaseDelayMs: config.AI_RETRY_BASE_DELAY_MS,
+  });
+}
+
+function enforcePromptLimits({ composed, agent, options }) {
+  const userMessageChars = String(composed.userPrompt || "").length;
+  const userMax = config.AI_USER_MESSAGE_MAX_CHARS || 20000;
+  if (userMessageChars > userMax) {
+    throw new AppError(400, `User message exceeds maximum length of ${userMax} characters.`);
+  }
+  const totalSystemChars = String(composed.systemPrompt || "").length;
+  const systemMax = config.AI_MAX_PROMPT_CHARS || 60000;
+  if (totalSystemChars > systemMax) {
+    throw new AppError(400, `System prompt plus context exceeds maximum length of ${systemMax} characters.`);
+  }
 }
 
 async function performKnowledgeRetrieval({ companyId, agent, payload, options }) {
@@ -118,6 +136,7 @@ async function sendConversationMessage(companyId, conversationId, payload, actor
     currentUserContent: payload.body,
     options,
   });
+  enforcePromptLimits({ composed, agent, options });
 
   let generated;
   const generationStartedAt = Date.now();

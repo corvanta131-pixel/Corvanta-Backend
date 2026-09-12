@@ -1,4 +1,5 @@
 const validator = require("validator");
+const mongoose = require("mongoose");
 const AppError = require("../utils/AppError");
 const {
   validateRequiredString,
@@ -140,6 +141,45 @@ function validateAttachmentInput(payload = {}, { isUpdate = false } = {}) {
   validateEnumValue(payload.entityType, ["message", "knowledge_document", "customer", "conversation"], "entityType");
 }
 
+function validateChannelInput(payload = {}, { isUpdate = false } = {}) {
+  rejectProtectedFieldOverrides(payload);
+
+  if (!payload.name || !validator.isLength(payload.name.trim(), { min: 2, max: 150 })) {
+    throw new AppError(400, "Channel name is required and must be between 2 and 150 characters.");
+  }
+
+  validateEnumValue(payload.type, ["email", "whatsapp", "instagram", "messenger", "webchat", "sms"], "type");
+  validateEnumValue(payload.status, ["active", "inactive", "connecting", "error"], "status");
+
+  if (payload.externalConfig !== undefined && payload.externalConfig !== null) {
+    if (typeof payload.externalConfig !== "object" || Array.isArray(payload.externalConfig)) {
+      throw new AppError(400, "Channel externalConfig must be an object.");
+    }
+  }
+
+  if (payload.metadata !== undefined && payload.metadata !== null) {
+    if (typeof payload.metadata !== "object" || Array.isArray(payload.metadata)) {
+      throw new AppError(400, "Channel metadata must be an object.");
+    }
+  }
+}
+
+function validateCustomerIdentityInput(payload = {}, { isUpdate = false } = {}) {
+  rejectProtectedFieldOverrides(payload);
+
+  if (!isUpdate) {
+    if (!payload.customerId || !mongoose.Types.ObjectId.isValid(payload.customerId)) {
+      throw new AppError(400, "Valid customerId is required.");
+    }
+  }
+
+  validateEnumValue(payload.channelType, ["email", "whatsapp", "instagram", "messenger", "webchat", "sms"], "channelType");
+
+  if (!payload.externalId || !validator.isLength(payload.externalId.trim(), { min: 1, max: 255 })) {
+    throw new AppError(400, "External ID is required and must be between 1 and 255 characters.");
+  }
+}
+
 module.exports = {
   validateCustomerInput,
   validateEmployeeInput,
@@ -151,4 +191,6 @@ module.exports = {
   validateAttachmentInput,
   validateKnowledgeSearchInput,
   validateKnowledgeIndexInput,
+  validateChannelInput,
+  validateCustomerIdentityInput,
 };

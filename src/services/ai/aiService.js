@@ -19,9 +19,24 @@ class AIProviderTimeoutError extends AIProviderError {
 }
 
 class AIRateLimitError extends AIProviderError {
-  constructor() {
+  constructor(waitMs = 0) {
     super("AI provider rate limit reached.", "PROVIDER_RATE_LIMIT", 429, { retryable: true });
     this.name = "AIRateLimitError";
+    this.retryAfterMs = Number(waitMs) || 0;
+  }
+}
+
+class AIContextLengthExceededError extends AIProviderError {
+  constructor() {
+    super("Request exceeds the model's maximum context length.", "CONTEXT_LENGTH_EXCEEDED", 400, { retryable: false });
+    this.name = "AIContextLengthExceededError";
+  }
+}
+
+class AIModelUnavailableError extends AIProviderError {
+  constructor() {
+    super("The requested model is currently unavailable.", "MODEL_UNAVAILABLE", 503, { retryable: true });
+    this.name = "AIModelUnavailableError";
   }
 }
 
@@ -76,6 +91,8 @@ class MockAIProvider extends AIProvider {
     if (this.delayMs > 0) await new Promise((resolve) => setTimeout(resolve, this.delayMs));
     if (prompt.includes("__AI_PROVIDER_TIMEOUT__")) throw new AIProviderTimeoutError();
     if (prompt.includes("__AI_PROVIDER_RATE_LIMIT__")) throw new AIRateLimitError();
+    if (prompt.includes("__AI_PROVIDER_CONTEXT_LENGTH__")) throw new AIContextLengthExceededError();
+    if (prompt.includes("__AI_PROVIDER_MODEL_UNAVAILABLE__")) throw new AIModelUnavailableError();
     if (prompt.includes("__AI_PROVIDER_FAILURE__")) throw new AIProviderError("AI provider is unavailable.", "PROVIDER_UNAVAILABLE", 502, { retryable: true });
 
     const text = `Mock AI response generated for: ${prompt}`;
@@ -98,21 +115,23 @@ class MockAIProvider extends AIProvider {
   }
 }
 
-class AIService {
-  constructor(provider = new MockAIProvider(), options = {}) {
-    this.provider = provider;
-    this.timeoutMs = Number(options.timeoutMs || config.AI_PROVIDER_TIMEOUT_MS || 10000);
-  }
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
-  async generateResponse(payload = {}) {
-    const request = normalizeRequest(payload);
+async function AIService_generateWithRetry(service, payload) {
+  const maxRetries = Number(service.maxRetries || config.AI_MAX_RETRIES || 2);
+  const baseDelayMs = Number(service.retryBaseDelayMs || config.AI_RETRY_BASE_DELAY_MS || 1000);
+  let lastError;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
     let timeout;
     try {
-      const providerRequest = this.provider.generate
-        ? this.provider.generate(request)
-        : this.provider.generateResponse(request);
+      const providerRequest = service.provider.generate
+        ? service.provider.generate(payload)
+        : service.provider.generateResponse(payload);
       const timeoutPromise = new Promise((_, reject) => {
-        timeout = setTimeout(() => reject(new AIProviderTimeoutError()), this.timeoutMs);
+        timeout = setTimeout(() => reject(new AIProviderTimeoutError()), service.timeoutMs);
       });
       const result = await Promise.race([providerRequest, timeoutPromise]);
       clearTimeout(timeout);
@@ -130,9 +149,35 @@ class AIService {
       };
     } catch (error) {
       clearTimeout(timeout);
-      if (error instanceof AIProviderError) throw error;
+      if (error instanceof AIProviderError) {
+        if (!error.retryable || attempt >= maxRetries) throw error;
+        if (error instanceof AIRateLimitError && error.retryAfterMs > 0) {
+          await sleep(Math.min(error.retryAfterMs, 30000));
+        } else {
+          const delay = Math.min(baseDelayMs * Math.pow(2, attempt), 30000);
+          await sleep(delay);
+        }
+        lastError = error;
+        continue;
+      }
       throw new AIProviderError("AI provider request failed.", "PROVIDER_ERROR", 502, { retryable: true });
     }
+  }
+  if (lastError) throw lastError;
+  throw new AIProviderError("AI provider request failed after retries.", "MAX_RETRIES_EXCEEDED", 502, { retryable: false });
+}
+
+class AIService {
+  constructor(provider = new MockAIProvider(), options = {}) {
+    this.provider = provider;
+    this.timeoutMs = Number(options.timeoutMs || config.AI_PROVIDER_TIMEOUT_MS || 10000);
+    this.maxRetries = Number(options.maxRetries || config.AI_MAX_RETRIES || 2);
+    this.retryBaseDelayMs = Number(options.retryBaseDelayMs || config.AI_RETRY_BASE_DELAY_MS || 1000);
+  }
+
+  async generateResponse(payload = {}) {
+    const request = normalizeRequest(payload);
+    return AIService_generateWithRetry(this, request);
   }
 
   async generate(payload = {}) {
@@ -146,9 +191,12 @@ module.exports = {
   AIProviderError,
   AIProviderTimeoutError,
   AIRateLimitError,
+  AIContextLengthExceededError,
+  AIModelUnavailableError,
   AIProvider,
   AIService,
   MockAIProvider,
   normalizeRequest,
   defaultAIService,
+  AIService_generateWithRetry,
 };

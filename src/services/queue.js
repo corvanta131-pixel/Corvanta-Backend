@@ -51,6 +51,7 @@ class InMemoryQueue {
       return false;
     }
     record.status = "pending";
+    this._processing.delete(jobId);
     setTimeout(() => {
       this._pending.push(jobId);
       this._drain();

@@ -1,6 +1,8 @@
 const Customer = require("../models/Customer");
 const AppError = require("../utils/AppError");
 const { validateObjectId } = require("../validators/commonValidator");
+const { runEventWorkflows } = require("./workflow/engine");
+const logger = require("../utils/logger");
 
 function getCompanyScope(companyId) {
   if (!companyId) {
@@ -52,6 +54,19 @@ async function createCustomer(companyId, payload) {
     isDeleted: false,
     deletedAt: null,
   });
+
+  try {
+    await runEventWorkflows({
+      companyId,
+      eventType: "customer.created",
+      eventContext: {
+        customer: { _id: String(customer._id), name: customer.name, email: customer.email, status: customer.status },
+      },
+      options: { idempotencyKey: `customer-created:${customer._id}` },
+    });
+  } catch (error) {
+    logger.error("Workflow execution for customer.created failed:", error.message);
+  }
 
   return customer;
 }

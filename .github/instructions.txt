@@ -1,23 +1,185 @@
-Stage F is approved for commit pending one final lightweight verification.
+STAGE K — GIT CHECKPOINT / COMMIT / PUSH
 
-Do NOT audit again.
-Do NOT modify any files.
-Do NOT commit.
-Do NOT push.
+Stage K is officially CLOSED.
 
-Run only:
+Final verified test baseline:
 
-1. `git status`
-2. `git diff --check`
-3. `node --test`
-4. `git diff --stat`
+- Stage K: 28/28
+- Stage J: 36/36
+- Stage I: 175/175
+- Stage H: 116/116
+- Full project: 454/454
+- git diff --check: PASS
+- Security: PASS
+- No disabled/skipped/weakened tests
+- No secrets exposed
+- Stage K: CLOSED
+
+We now need to create a GitHub checkpoint.
+
+IMPORTANT:
+This is NOT a new implementation mission.
+
+DO NOT modify application behavior.
+DO NOT refactor.
+DO NOT fix unrelated issues.
+DO NOT start Stage L.
+
+==================================================
+1. INSPECT GIT STATE
+==================================================
+
+Run:
+
+git status
+git branch
+git log --oneline -10
+git diff --stat
+git diff --check
+
+Also inspect:
+
+git diff
+
+and identify the exact files belonging to:
+
+- pre-existing Stage F–G work
+- Stage H/I work
+- Stage J work
+- Stage K work
+
+==================================================
+2. PROTECT ALL LEGITIMATE WORK
+==================================================
+
+Do NOT reset.
+Do NOT restore.
+Do NOT discard.
+Do NOT delete untracked files.
+
+There is legitimate uncommitted work from previous stages.
+
+Confirm that all legitimate Stage F–K work is present.
+
+==================================================
+3. SECRET CHECK
+==================================================
+
+Before staging anything, inspect for credentials/secrets.
 
 Confirm:
 
-* 135 tests pass
-* 0 failures
-* diff-check exit 0
+- .env remains ignored
+- no API keys/passwords/tokens/secrets are being staged
+- .env.example contains placeholders only
+- no credentials appear in git diff
 
-Also confirm `.env` is NOT among the files being committed.
+If a secret is found, STOP.
 
-Then stop.
+Do not commit it.
+
+==================================================
+4. STAGE THE COMPLETED WORK
+==================================================
+
+Stage the legitimate completed project work that is currently uncommitted.
+
+Do NOT stage:
+
+- .env
+- credentials
+- temporary files
+- debug files
+- scratch files
+- unrelated personal files
+- .kilo/ unless it is intentionally tracked project configuration
+
+After staging, run:
+
+git status
+git diff --cached --stat
+git diff --cached --check
+
+Inspect the staged diff.
+
+==================================================
+5. FINAL TEST VERIFICATION
+==================================================
+
+Before committing, run the full test suite again.
+
+Expected:
+
+454/454
+
+Also run:
+
+git diff --cached --check
+
+Do not commit if tests fail.
+
+==================================================
+6. COMMIT
+==================================================
+
+If everything is clean, create ONE checkpoint commit containing the completed work.
+
+Use a clear commit message such as:
+
+feat: complete stages f through k
+
+Do NOT amend an older commit.
+
+Do NOT rewrite history.
+
+==================================================
+7. VERIFY COMMIT
+==================================================
+
+Run:
+
+git status
+git log --oneline -3
+git show --stat --oneline HEAD
+
+Confirm the working tree is clean except for anything explicitly identified as intentionally untracked/uncommitted.
+
+==================================================
+8. PUSH
+==================================================
+
+The repository is already configured with origin and the branch is main.
+
+Push the new checkpoint:
+
+git push origin main
+
+Do not force push.
+
+==================================================
+FINAL RESPONSE
+==================================================
+
+GIT CHECKPOINT COMPLETE
+
+COMMIT:
+COMMIT HASH:
+FILES COMMITTED:
+TESTS BEFORE COMMIT:
+SECRETS CHECK:
+GIT DIFF CHECK:
+WORKING TREE STATUS:
+REMOTE:
+PUSH RESULT:
+
+CONFIRM:
+
+- commit exists locally
+- commit exists on origin/main
+- no force push was used
+- no secrets were committed
+- no legitimate Stage F–K work was discarded
+
+STOP AFTER THE PUSH.
+
+DO NOT START STAGE L.

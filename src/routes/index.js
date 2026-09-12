@@ -9,6 +9,11 @@ const knowledgeBaseRoutes = require("./knowledgeBaseRoutes");
 const knowledgeBaseSearchRoutes = require("./knowledgeBaseSearchRoutes");
 const knowledgeDocumentRoutes = require("./knowledgeDocumentRoutes");
 const conversationRoutes = require("./conversationRoutes");
+const workflowRoutes = require("./workflowRoutes");
+const inboundRoutes = require("./inboundRoutes");
+const channelRoutes = require("./channelRoutes");
+const customerIdentityRoutes = require("./customerIdentityRoutes");
+const outboundRoutes = require("./outboundRoutes");
 
 const router = express.Router();
 
@@ -22,5 +27,10 @@ router.use("/knowledge-bases", knowledgeBaseRoutes);
 router.use("/knowledge-bases", knowledgeBaseSearchRoutes);
 router.use("/knowledge-documents", knowledgeDocumentRoutes);
 router.use("/conversations", conversationRoutes);
+router.use("/workflows", workflowRoutes);
+router.use("/webhooks", inboundRoutes);
+router.use("/channels", channelRoutes);
+router.use("/customer-identities", customerIdentityRoutes);
+router.use("/outbound", outboundRoutes);
 
 module.exports = router;

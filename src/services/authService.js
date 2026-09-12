@@ -39,6 +39,7 @@ const DEFAULT_PERMISSIONS = [
   "conversations:delete",
   "conversations:messages:read",
   "conversations:send",
+  "messages:send",
   "documents:read",
   "documents:upload",
   "documents:delete",

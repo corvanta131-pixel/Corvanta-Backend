@@ -225,5 +225,87 @@ The following can be introduced without rewriting the business layer:
 - **AWS Lambda / ECS worker** — extract `ingestionWorker` into a separate process
 - **OpenTelemetry** — add tracing to `IngestionJob` lifecycle
 
+## Stage G: real OpenAI provider integration
+
+Stage G wires the existing AI conversation flow and embedding pipeline to the real OpenAI provider through the abstraction layer. The MockAIProvider remains the default for tests and offline development.
+
+### What Stage G adds
+
+- **Bounded retry with exponential backoff** in `AIService.generateResponse` for transient errors (rate limits, timeouts, 5xx). Default `AI_MAX_RETRIES=2`, `AI_RETRY_BASE_DELAY_MS=1000`. Non-retryable errors (auth, context length, malformed) are surfaced immediately.
+- **Normalized OpenAI error types**: `AIRateLimitError`, `AIProviderTimeoutError`, `AIContextLengthExceededError`, `AIModelUnavailableError`, `AIProviderError`. The provider maps raw upstream errors to controlled `AIProviderError` subtypes.
+- **Per-company AI rate limiter** (`src/middleware/aiRateLimit.js`): `AI_CONVERSATION_RATE_LIMIT_MAX` requests per `AI_CONVERSATION_RATE_LIMIT_WINDOW_MS` per company. Returns 429 with `X-AI-RateLimit-*` headers.
+- **Prompt size limits**: `AI_USER_MESSAGE_MAX_CHARS` (default 20000) and `AI_MAX_PROMPT_CHARS` (default 60000) enforced server-side.
+- **Improved secret redaction in logger**: string arguments are now also passed through `redactValue`, so embedded `sk-...` patterns or Bearer tokens in any log line are masked.
+- **Token accounting** on every AI response (promptTokens, completionTokens, totalTokens) recorded in `Message.metadata.usage`.
+- **Latency tracking**: `latencyMs` recorded per AI call.
+- **Model allowlist enforcement** at `AIAgent` create/update time; clients cannot configure an unapproved provider or model.
+- **No-API-key offline tests**: tests use the mock provider by default. Real OpenAI integration tests are opt-in via `OPENAI_API_KEY` being set to a non-placeholder value at test start.
+
+### Provider abstraction
+
+The real OpenAI provider sits behind the same `AIProvider` interface as the mock:
+
+```
+AIProvider (abstract)
+├── MockAIProvider (default for tests)
+└── OpenAIProvider (real, requires valid OPENAI_API_KEY)
+```
+
+The `EmbeddingProvider` interface has the same structure:
+
+```
+EmbeddingProvider (abstract)
+├── MockEmbeddingProvider (default for tests)
+└── OpenAIEmbeddingProvider (real)
+```
+
+Selection is controlled by `AI_PROVIDER` and `AI_EMBEDDING_PROVIDER` env vars. The `agentConfigValidator` validates that any `AIAgent`'s configured provider/model is in `AI_ALLOWED_PROVIDERS`/`AI_ALLOWED_GENERATION_MODELS`.
+
+### OpenAI integration details
+
+When `AI_PROVIDER=openai` and `OPENAI_API_KEY` is set to a real value, the conversation flow runs:
+
+1. `aiConversationService.sendConversationMessage` resolves the AI provider via `providerRegistry.createProvider(agent.provider)`.
+2. The provider's `generate()` is invoked with `{ systemPrompt, messages, temperature, maxTokens }`.
+3. The OpenAI client calls `chat.completions.create` with the configured `model`.
+4. The response is normalized to `{ text, provider, model, usage, tokenMetadata, finishReason, providerRequestId }`.
+5. Usage metadata (prompt/completion/total tokens, latency) is persisted to `Message.metadata`.
+6. Errors are normalized to `AIProviderError` subtypes with HTTP status codes (401, 429, 502, 503, 504).
+
+### Configuration
+
+Key env vars:
+
+- `AI_PROVIDER` — `mock` (default) or `openai`
+- `OPENAI_API_KEY` — required for real OpenAI calls; production refuses placeholder values
+- `OPENAI_ORGANIZATION` — optional
+- `AI_PROVIDER_TIMEOUT_MS` — request timeout (default 10000)
+- `AI_MAX_RETRIES` — max retry attempts for transient failures (default 2)
+- `AI_RETRY_BASE_DELAY_MS` — base delay for exponential backoff (default 1000)
+- `AI_USER_MESSAGE_MAX_CHARS` — max user message size (default 20000)
+- `AI_MAX_PROMPT_CHARS` — max system prompt + context size (default 60000)
+- `AI_CONVERSATION_RATE_LIMIT_MAX` — requests per company per window (default 30)
+- `AI_CONVERSATION_RATE_LIMIT_WINDOW_MS` — window in ms (default 60000)
+- `AI_ALLOWED_PROVIDERS` — server-side provider allowlist (default `mock,openai`)
+- `AI_ALLOWED_GENERATION_MODELS` — server-side model allowlist
+
+### Security
+
+- API keys are never logged, never returned in API responses, and never stored in DB records. The logger redacts `sk-...`, `Bearer ...`, and forbidden key names (`apiKey`, `authorization`, `api_key`, `secret`, `password`, `token`, etc.).
+- Provider errors are normalized before reaching the client. Raw upstream error messages with internal details are discarded.
+- Tenant isolation is preserved across the AI flow: conversation, customer, agent, knowledge base, and retrieval are all company-scoped.
+- The server refuses to start in production if `OPENAI_API_KEY` is still a placeholder.
+- Protected fields (`companyId`, `_id`, `isDeleted`, etc.) cannot be supplied by clients on `AIAgent` create/update.
+
+### Enabling real integration tests (opt-in)
+
+The default test suite never makes a real OpenAI call. To run an optional real-provider integration test, set a valid `OPENAI_API_KEY` before running tests and set `RUN_OPENAI_INTEGRATION_TESTS=1`. The test will be skipped otherwise.
+
+### Limitations
+
+- The OpenAI provider uses the public OpenAI SDK. Failures (rate limits, 5xx) are translated to controlled errors, but real-world rate limits and quotas still apply.
+- The retry loop is bounded (default 2 attempts). Uncontrolled retry storms are prevented.
+- This stage does not introduce streaming responses, function calling, or tool use — those remain future work.
+
 # Corvanta-Backend
 # Corvanta-Backend

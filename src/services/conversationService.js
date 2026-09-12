@@ -4,6 +4,8 @@ const AIAgent = require("../models/AIAgent");
 const User = require("../models/User");
 const AppError = require("../utils/AppError");
 const { validateObjectId } = require("../validators/commonValidator");
+const { runEventWorkflows } = require("./workflow/engine");
+const logger = require("../utils/logger");
 
 function getCompanyScope(companyId) {
   if (!companyId) throw new AppError(403, "Missing company context.");
@@ -73,6 +75,20 @@ async function createConversation(companyId, payload) {
     isDeleted: false,
     deletedAt: null,
   });
+
+  try {
+    await runEventWorkflows({
+      companyId,
+      eventType: "conversation.created",
+      eventContext: {
+        conversation: { _id: String(conversation._id), status: conversation.status, channelType: conversation.channelType, customerId: conversation.customerId ? String(conversation.customerId) : null },
+      },
+      options: { idempotencyKey: `conv-created:${conversation._id}` },
+    });
+  } catch (error) {
+    logger.error("Workflow execution for conversation.created failed:", error.message);
+  }
+
   return conversation;
 }
 
@@ -103,6 +119,20 @@ async function updateConversation(companyId, conversationId, payload) {
     if (payload[field] !== undefined) conversation[field] = payload[field];
   }
   await conversation.save();
+
+  try {
+    await runEventWorkflows({
+      companyId,
+      eventType: "conversation.updated",
+      eventContext: {
+        conversation: { _id: String(conversation._id), status: conversation.status, channelType: conversation.channelType, customerId: conversation.customerId ? String(conversation.customerId) : null },
+      },
+      options: { idempotencyKey: `conv-updated:${conversation._id}:${Date.now()}` },
+    });
+  } catch (error) {
+    logger.error("Workflow execution for conversation.updated failed:", error.message);
+  }
+
   return conversation;
 }
 
