@@ -123,7 +123,10 @@ class InMemoryQueue {
 
 class Queue {
   constructor() {
-    throw new Error("Queue is abstract. Use createQueue().");
+    // Abstract base: direct instantiation is not allowed.
+    if (new.target === Queue) {
+      throw new Error("Queue is abstract. Use createQueue().");
+    }
   }
 
   async enqueue() { throw new Error("Queue.enqueue not implemented"); }
@@ -140,6 +143,10 @@ function createQueue(name = "in-memory", options = {}) {
   const normalized = String(name || "in-memory").toLowerCase();
   if (normalized === "in-memory" || normalized === "memory" || normalized === "") {
     return new InMemoryQueue(options);
+  }
+  if (normalized === "sqs") {
+    const { createSQSQueue } = require("./providers/sqsQueue");
+    return createSQSQueue("sqs", options);
   }
   throw new Error(`Unsupported queue: ${name}`);
 }

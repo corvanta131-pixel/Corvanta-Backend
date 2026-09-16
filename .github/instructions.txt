@@ -1,185 +1,120 @@
-STAGE K — GIT CHECKPOINT / COMMIT / PUSH
+STAGE M — GIT CHECKPOINT
 
-Stage K is officially CLOSED.
+Stage M has been completed and audited.
 
-Final verified test baseline:
+Selected capability:
 
-- Stage K: 28/28
-- Stage J: 36/36
-- Stage I: 175/175
-- Stage H: 116/116
-- Full project: 454/454
-- git diff --check: PASS
-- Security: PASS
-- No disabled/skipped/weakened tests
-- No secrets exposed
-- Stage K: CLOSED
-
-We now need to create a GitHub checkpoint.
-
-IMPORTANT:
-This is NOT a new implementation mission.
-
-DO NOT modify application behavior.
-DO NOT refactor.
-DO NOT fix unrelated issues.
-DO NOT start Stage L.
+AWS SQS production Queue provider.
 
 ==================================================
-1. INSPECT GIT STATE
+1. FINAL SAFETY CHECK
 ==================================================
 
 Run:
 
-git status
-git branch
-git log --oneline -10
-git diff --stat
+git status --short
+
 git diff --check
 
-Also inspect:
+Inspect the complete diff.
 
-git diff
-
-and identify the exact files belonging to:
-
-- pre-existing Stage F–G work
-- Stage H/I work
-- Stage J work
-- Stage K work
-
-==================================================
-2. PROTECT ALL LEGITIMATE WORK
-==================================================
-
-Do NOT reset.
-Do NOT restore.
-Do NOT discard.
-Do NOT delete untracked files.
-
-There is legitimate uncommitted work from previous stages.
-
-Confirm that all legitimate Stage F–K work is present.
-
-==================================================
-3. SECRET CHECK
-==================================================
-
-Before staging anything, inspect for credentials/secrets.
+Confirm every modified file belongs to Stage M.
 
 Confirm:
 
-- .env remains ignored
-- no API keys/passwords/tokens/secrets are being staged
-- .env.example contains placeholders only
-- no credentials appear in git diff
-
-If a secret is found, STOP.
-
-Do not commit it.
-
-==================================================
-4. STAGE THE COMPLETED WORK
-==================================================
-
-Stage the legitimate completed project work that is currently uncommitted.
-
-Do NOT stage:
-
-- .env
-- credentials
-- temporary files
-- debug files
-- scratch files
-- unrelated personal files
-- .kilo/ unless it is intentionally tracked project configuration
-
-After staging, run:
-
-git status
-git diff --cached --stat
-git diff --cached --check
-
-Inspect the staged diff.
+- no .env
+- no AWS credentials
+- no API keys
+- no secrets
+- no scratch files
+- no debug files
+- no unrelated functionality
 
 ==================================================
-5. FINAL TEST VERIFICATION
+2. TEST VERIFICATION
 ==================================================
 
-Before committing, run the full test suite again.
+Verify the repository is exactly the state that passed the Stage M closure tests.
 
-Expected:
+If anything changed after the tested state:
 
-454/454
-
-Also run:
-
-git diff --cached --check
-
-Do not commit if tests fail.
+rerun the relevant tests before committing.
 
 ==================================================
-6. COMMIT
+3. COMMIT
 ==================================================
 
-If everything is clean, create ONE checkpoint commit containing the completed work.
+Create ONE normal commit.
 
-Use a clear commit message such as:
+Suggested commit message:
 
-feat: complete stages f through k
+feat: complete stage m sqs queue provider
 
-Do NOT amend an older commit.
+Do NOT:
 
-Do NOT rewrite history.
-
-==================================================
-7. VERIFY COMMIT
-==================================================
-
-Run:
-
-git status
-git log --oneline -3
-git show --stat --oneline HEAD
-
-Confirm the working tree is clean except for anything explicitly identified as intentionally untracked/uncommitted.
+- amend previous commits
+- reset
+- force push
+- discard legitimate work
+- rewrite history
 
 ==================================================
-8. PUSH
+4. PUSH
 ==================================================
 
-The repository is already configured with origin and the branch is main.
+Push normally to:
 
-Push the new checkpoint:
+origin/main
 
-git push origin main
+Do NOT force push.
 
-Do not force push.
+==================================================
+5. VERIFY
+==================================================
+
+After pushing:
+
+git status --short
+
+git log -1 --oneline
+
+git rev-parse HEAD
+
+git rev-parse origin/main
+
+Confirm:
+
+HEAD == origin/main
 
 ==================================================
 FINAL RESPONSE
 ==================================================
 
-GIT CHECKPOINT COMPLETE
+STAGE M — GIT CHECKPOINT
 
 COMMIT:
+
 COMMIT HASH:
-FILES COMMITTED:
-TESTS BEFORE COMMIT:
-SECRETS CHECK:
-GIT DIFF CHECK:
-WORKING TREE STATUS:
-REMOTE:
-PUSH RESULT:
 
-CONFIRM:
+COMMIT MESSAGE:
 
-- commit exists locally
-- commit exists on origin/main
-- no force push was used
-- no secrets were committed
-- no legitimate Stage F–K work was discarded
+FILES:
 
-STOP AFTER THE PUSH.
+DEPENDENCIES:
 
-DO NOT START STAGE L.
+TESTS:
+
+FULL REGRESSION:
+
+git diff --check:
+
+PUSH:
+
+ORIGIN/MAIN:
+
+WORKING TREE:
+
+STATUS:
+CHECKPOINT COMPLETE / BLOCKED
+
+STOP.

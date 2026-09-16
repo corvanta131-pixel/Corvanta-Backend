@@ -15,7 +15,7 @@ test("K - createQueue accepts 'memory' and empty name aliases", () => {
 });
 
 test("K - createQueue throws on unsupported queue name", () => {
-  assert.throws(() => createQueue("sqs"), /Unsupported queue/);
+  assert.throws(() => createQueue("s3"), /Unsupported queue/);
 });
 
 test("K - Queue abstract class throws on direct instantiation", () => {
