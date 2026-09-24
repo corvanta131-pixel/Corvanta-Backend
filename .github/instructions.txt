@@ -1,120 +1,557 @@
-STAGE M — GIT CHECKPOINT
+You are acting as the senior backend engineer responsible for auditing the existing Corvanta backend.
 
-Stage M has been completed and audited.
+IMPORTANT:
 
-Selected capability:
+* DO NOT modify any files.
+* DO NOT refactor anything.
+* DO NOT install packages.
+* DO NOT create new files.
+* DO NOT "fix" anything.
+* This is an INFORMATION-GATHERING task only.
+* Inspect the actual repository/source code rather than guessing from filenames.
+* Be extremely detailed.
+* Your report will be given to another senior developer who will use it to design and build the Corvanta React + TypeScript frontend.
 
-AWS SQS production Queue provider.
+I need a complete technical explanation of the CURRENT Corvanta backend.
 
-==================================================
-1. FINAL SAFETY CHECK
-==================================================
+## 1. PROJECT OVERVIEW
 
-Run:
+Explain in detail:
 
-git status --short
+* What Corvanta is designed to do based on the actual implementation.
+* The problem the backend solves.
+* The major business capabilities currently implemented.
+* The major modules/features.
+* The architecture and how the major parts communicate.
+* The technology stack.
+* Runtime and Node.js version if determinable.
+* Database technology.
+* External services.
+* AWS services currently supported or implemented.
+* Development vs production behavior.
+* Any important architectural decisions you find.
 
-git diff --check
+Do not invent product functionality that does not exist.
 
-Inspect the complete diff.
+Clearly distinguish:
 
-Confirm every modified file belongs to Stage M.
+* implemented functionality
+* partially implemented functionality
+* infrastructure-ready functionality
+* planned/intended functionality that is only implied by the code
 
-Confirm:
+## 2. COMPLETE DIRECTORY STRUCTURE
 
-- no .env
-- no AWS credentials
-- no API keys
-- no secrets
-- no scratch files
-- no debug files
-- no unrelated functionality
+Provide a detailed directory/file tree of the backend.
 
-==================================================
-2. TEST VERIFICATION
-==================================================
+For important files, explain:
 
-Verify the repository is exactly the state that passed the Stage M closure tests.
+* what the file does
+* why it exists
+* what other files depend on it
 
-If anything changed after the tested state:
+Pay particular attention to:
 
-rerun the relevant tests before committing.
+* entry point
+* routes
+* controllers
+* services
+* models
+* middleware
+* configuration
+* validation
+* utilities
+* providers
+* queues
+* AWS integrations
+* database layer
+* authentication
+* authorization
+* error handling
+* tests
 
-==================================================
-3. COMMIT
-==================================================
+## 3. ENTRY POINT
 
-Create ONE normal commit.
+Give me the COMPLETE CURRENT CONTENT of the main application entry point, especially:
 
-Suggested commit message:
+* index.js
+* server.js
+* app.js
+* or whichever file actually starts the application
 
-feat: complete stage m sqs queue provider
+If index.js exists, provide its complete current content.
 
-Do NOT:
+Do not summarize this section. I specifically need the actual source code.
 
-- amend previous commits
-- reset
-- force push
-- discard legitimate work
-- rewrite history
+Explain the entry point afterwards.
 
-==================================================
-4. PUSH
-==================================================
+## 4. API INVENTORY
 
-Push normally to:
+This is extremely important.
 
-origin/main
+Find EVERY API endpoint currently implemented.
 
-Do NOT force push.
+Create a detailed table containing:
 
-==================================================
-5. VERIFY
-==================================================
+* HTTP method
+* complete route/path
+* purpose
+* controller
+* service used
+* authentication required?
+* authorization/role requirements?
+* request parameters
+* query parameters
+* request body
+* validation rules
+* successful response
+* error responses
+* relevant database models
+* external services involved
 
-After pushing:
+Include ALL endpoints, not just major ones.
 
-git status --short
+Group them logically by feature.
 
-git log -1 --oneline
+Example:
 
-git rev-parse HEAD
+AUTH
+POST /api/auth/register
+POST /api/auth/login
+...
 
-git rev-parse origin/main
+Do not invent endpoints.
 
-Confirm:
+## 5. REQUEST AND RESPONSE SCHEMAS
 
-HEAD == origin/main
+For every important endpoint, document the actual request and response shape.
 
-==================================================
-FINAL RESPONSE
-==================================================
+For example:
 
-STAGE M — GIT CHECKPOINT
+REQUEST:
+{
+...
+}
 
-COMMIT:
+RESPONSE:
+{
+...
+}
 
-COMMIT HASH:
+Include:
 
-COMMIT MESSAGE:
+* required fields
+* optional fields
+* data types
+* enums
+* nested objects
+* IDs
+* timestamps
+* pagination structures
+* error structures
 
-FILES:
+This information will later be converted into TypeScript types/interfaces.
 
-DEPENDENCIES:
+## 6. DATABASE
 
-TESTS:
+Explain the complete database architecture.
 
-FULL REGRESSION:
+Identify every model/schema/table/document structure.
 
-git diff --check:
+For each model explain:
 
-PUSH:
+* model name
+* fields
+* data types
+* required/optional fields
+* defaults
+* enums
+* indexes
+* unique constraints
+* relationships
+* references
+* validation
+* timestamps
+* important business rules
 
-ORIGIN/MAIN:
+Explain how the models relate to one another.
 
-WORKING TREE:
+If MongoDB/Mongoose is used, explain the schemas and relationships exactly as implemented.
 
-STATUS:
-CHECKPOINT COMPLETE / BLOCKED
+## 7. AUTHENTICATION
 
-STOP.
+Document the complete authentication implementation.
+
+Explain:
+
+* registration
+* login
+* logout if implemented
+* password handling
+* password hashing
+* JWT/session handling
+* token creation
+* token validation
+* refresh tokens if any
+* cookies vs Authorization headers
+* expiration
+* authentication middleware
+* protected routes
+* current-user endpoint if any
+* password reset
+* email verification
+* OTP
+* account activation
+* account approval
+
+Only document functionality that actually exists.
+
+## 8. AUTHORIZATION
+
+Explain how the backend determines what a user is allowed to do.
+
+Document:
+
+* roles
+* permissions
+* middleware
+* protected resources
+* admin functionality
+* ownership checks
+* subscription/access checks
+
+Show examples of protected endpoints.
+
+## 9. VALIDATION
+
+Document ALL important validation.
+
+Identify:
+
+* validation libraries
+* schemas
+* middleware
+* required fields
+* field limits
+* formats
+* enums
+* business-rule validation
+* duplicate checks
+* authorization validation
+
+Explain where validation occurs.
+
+## 10. ERROR HANDLING
+
+Explain the complete error architecture.
+
+Include:
+
+* custom error classes
+* middleware
+* HTTP status codes
+* error response format
+* validation errors
+* authentication errors
+* authorization errors
+* database errors
+* external-service failures
+
+Show the actual standard error response structure.
+
+## 11. EXTERNAL SERVICES
+
+Identify every external integration.
+
+For each one explain:
+
+* service
+* purpose
+* SDK/package
+* configuration/environment variables
+* how it is called
+* what data is sent
+* what data is returned
+* failure behavior
+
+Pay special attention to:
+
+* email
+* payment
+* cloud storage
+* AWS
+* SQS
+* S3
+* databases
+* third-party APIs
+
+## 12. QUEUE / ASYNCHRONOUS ARCHITECTURE
+
+The backend contains an abstraction around queue providers.
+
+Explain this architecture in detail.
+
+Identify:
+
+* queue interface
+* InMemory provider
+* SQS provider
+* producers
+* consumers/workers
+* jobs/messages
+* message payloads
+* retry behavior
+* failure handling
+* environment switching
+* how AWS SQS fits into production
+
+Explain exactly how the application currently behaves.
+
+## 13. AWS INTEGRATION
+
+Document everything in the application that relates to AWS.
+
+Include:
+
+* S3
+* SQS
+* IAM assumptions
+* credentials
+* environment variables
+* SDK packages
+* queues
+* buckets
+* object operations
+* production/development differences
+
+Do not confuse application-level AWS code with Terraform infrastructure.
+
+Clearly separate what the backend code implements from what Terraform provisions.
+
+## 14. ENVIRONMENT VARIABLES
+
+Find every environment variable referenced by the source code.
+
+Create a table:
+
+VARIABLE | PURPOSE | REQUIRED? | USED WHERE | EXAMPLE FORMAT
+
+Do NOT expose real secrets.
+
+If actual credentials/API keys are present in files, DO NOT reproduce their values. Only give the variable names and explain what they represent.
+
+## 15. SERVICES AND BUSINESS LOGIC
+
+For every major service, explain:
+
+* responsibility
+* functions/methods
+* inputs
+* outputs
+* database operations
+* external operations
+* business rules
+* callers
+
+Trace important operations from:
+
+HTTP request
+→ route
+→ middleware
+→ controller
+→ service
+→ database/external service
+→ response
+
+## 16. CONTROLLERS
+
+Document each controller.
+
+For each controller:
+
+* methods
+* endpoints using it
+* inputs
+* services called
+* responses
+* errors
+
+Explain the controller/service separation.
+
+## 17. ROUTES
+
+Give me the complete route structure.
+
+Show how route files connect to:
+
+* middleware
+* controllers
+* validation
+* application entry point
+
+## 18. MIDDLEWARE
+
+List every middleware and explain:
+
+* purpose
+* where it is used
+* order of execution
+* inputs
+* outputs
+* failure behavior
+
+Include:
+
+* authentication
+* authorization
+* validation
+* error handling
+* CORS
+* rate limiting
+* logging
+* security middleware
+
+if they exist.
+
+## 19. TESTING
+
+Give a detailed overview of the test suite.
+
+Report:
+
+* testing framework
+* total tests
+* test organization
+* unit tests
+* integration tests
+* API tests
+* mocks
+* fixtures
+* test database
+* coverage if available
+
+Identify the major areas already tested.
+
+If the repository currently has a known test count, report the actual current count.
+
+## 20. PACKAGE DEPENDENCIES
+
+Inspect package.json/package-lock and identify:
+
+* production dependencies
+* development dependencies
+* important packages
+* why each important package exists
+
+Do not simply dump package.json. Explain the important dependencies.
+
+## 21. SECURITY
+
+Audit the existing implementation for security mechanisms.
+
+Document what is already implemented around:
+
+* password security
+* JWT/session security
+* CORS
+* headers
+* input validation
+* injection prevention
+* rate limiting
+* secret management
+* file uploads
+* authorization
+* sensitive data exposure
+
+Do NOT make a vague security assessment. Point to actual implementation.
+
+## 22. FRONTEND CONTRACT
+
+This is especially important.
+
+Based ONLY on the actual backend implementation, tell the future frontend developer:
+
+* what pages/features the frontend can currently support
+* what authentication flows it needs
+* what forms are required
+* what data needs to be displayed
+* what dashboards are possible
+* what user actions are possible
+* what API calls will be needed
+* what TypeScript types/interfaces will be required
+* what loading/error/empty states should be anticipated
+
+Separate CURRENT backend capabilities from future product ideas.
+
+## 23. BACKEND GAPS
+
+Identify anything the frontend developer needs to know because the backend does NOT currently support it.
+
+For example:
+
+* frontend feature desired but no endpoint exists
+* endpoint exists but lacks necessary data
+* payment workflow incomplete
+* subscription management incomplete
+* user profile endpoint missing
+* pagination missing
+* etc.
+
+Do not modify the backend.
+
+## 24. ARCHITECTURAL DIAGRAM
+
+Produce a text-based architecture diagram showing:
+
+USER
+↓
+FRONTEND
+↓
+API
+↓
+AUTH/MIDDLEWARE
+↓
+CONTROLLERS
+↓
+SERVICES
+↓
+DATABASE / QUEUES / AWS / EXTERNAL SERVICES
+
+Adapt the diagram to the actual Corvanta architecture.
+
+## 25. COMPLETE FRONTEND HANDOFF
+
+Finish with a section called:
+
+"CORVANTA FRONTEND HANDOFF"
+
+Give the future frontend developer a concise but complete technical briefing containing everything they need before touching the React project.
+
+The briefing should include:
+
+1. What Corvanta currently does
+2. Backend architecture
+3. API surface
+4. authentication model
+5. database entities
+6. important business rules
+7. external services
+8. AWS integration
+9. frontend requirements
+10. backend limitations/gaps
+11. recommended frontend implementation order
+
+FINAL REQUIREMENT:
+
+At the end, provide a short "FACT CHECK" section with:
+
+* confirmed from source code
+* inferred from architecture
+* not currently implemented
+* unclear and requires clarification
+
+Again:
+
+DO NOT MODIFY THE REPOSITORY.
+
+This is a forensic technical audit and frontend handoff document only.

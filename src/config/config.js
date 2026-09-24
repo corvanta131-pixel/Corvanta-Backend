@@ -67,39 +67,81 @@ const config = {
   AUTH_RATE_LIMIT_MAX: Number(process.env.AUTH_RATE_LIMIT_MAX || 10),
 };
 
+// function validateStartupConfig() {
+//   const required = ["MONGO_URI", "JWT_ACCESS_SECRET", "JWT_REFRESH_SECRET"];
+
+//   for (const key of required) {
+//     if (!config[key]) {
+//       throw new Error(`${key} is required but was not provided.`);
+//     }
+//   }
+
+//   if (config.NODE_ENV === "production") {
+//     const placeholders = [
+//       "development-placeholder-change-this",
+//       "development-placeholder-resend-key",
+//       "development-placeholder-cloud-name",
+//       "development-placeholder-cloud-key",
+//       "development-placeholder-cloud-secret",
+//       "development-placeholder-ai-key",
+//       "development-placeholder-openai-key",
+//     ];
+
+//     for (const placeholder of placeholders) {
+//       if ([
+//         config.JWT_ACCESS_SECRET,
+//         config.JWT_REFRESH_SECRET,
+//         config.RESEND_API_KEY,
+//         config.CLOUDINARY_CLOUD_NAME,
+//         config.CLOUDINARY_API_KEY,
+//         config.CLOUDINARY_API_SECRET,
+//         config.AI_API_KEY,
+//         config.OPENAI_API_KEY,
+//       ].includes(placeholder)) {
+//         throw new Error("Production validation failed: replace development placeholder values before starting in production.");
+//       }
+//     }
+//   }
+// }
 function validateStartupConfig() {
-  const required = ["MONGO_URI", "JWT_ACCESS_SECRET", "JWT_REFRESH_SECRET"];
+  const required = [
+    "MONGO_URI",
+    "JWT_ACCESS_SECRET",
+    "JWT_REFRESH_SECRET",
+  ];
 
   for (const key of required) {
-    if (!config[key]) {
+    if (!process.env[key]) {
       throw new Error(`${key} is required but was not provided.`);
     }
   }
 
   if (config.NODE_ENV === "production") {
-    const placeholders = [
-      "development-placeholder-change-this",
-      "development-placeholder-resend-key",
-      "development-placeholder-cloud-name",
-      "development-placeholder-cloud-key",
-      "development-placeholder-cloud-secret",
-      "development-placeholder-ai-key",
-      "development-placeholder-openai-key",
+    const requiredProductionSecrets = [
+      "JWT_ACCESS_SECRET",
+      "JWT_REFRESH_SECRET",
     ];
 
-    for (const placeholder of placeholders) {
-      if ([
-        config.JWT_ACCESS_SECRET,
-        config.JWT_REFRESH_SECRET,
-        config.RESEND_API_KEY,
-        config.CLOUDINARY_CLOUD_NAME,
-        config.CLOUDINARY_API_KEY,
-        config.CLOUDINARY_API_SECRET,
-        config.AI_API_KEY,
-        config.OPENAI_API_KEY,
-      ].includes(placeholder)) {
-        throw new Error("Production validation failed: replace development placeholder values before starting in production.");
+    for (const key of requiredProductionSecrets) {
+      const value = process.env[key];
+
+      if (
+        !value ||
+        value.startsWith("development-placeholder-")
+      ) {
+        throw new Error(
+          `Production validation failed: ${key} must be configured with a real value.`
+        );
       }
+    }
+
+    if (
+      !config.MONGO_URI ||
+      config.MONGO_URI === "mongodb://localhost:27017/corvanta_dev"
+    ) {
+      throw new Error(
+        "Production validation failed: MONGO_URI must point to the production database."
+      );
     }
   }
 }

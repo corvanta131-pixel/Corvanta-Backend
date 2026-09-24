@@ -1,0 +1,140 @@
+module.exports = config;
+louis@louis-X550CA:~/corvanta/corvanta-backend$ npm run dev
+
+> corvanta-backend@1.0.0 dev
+> NODE_OPTIONS=--openssl-legacy-provider nodemon server.js
+
+[nodemon] 3.1.14
+[nodemon] to restart at any time, enter `rs`
+[nodemon] watching path(s): *.*
+[nodemon] watching extensions: js,mjs,cjs,json
+[nodemon] starting `node server.js`
+◇ injected env (30) from .env // tip: ⌘ enable debugging { debug: true }
+/home/louis/corvanta/corvanta-backend/src/config/config.js:101
+        throw new Error("Production validation failed: replace development placeholder values before starting in production.");
+        ^
+
+Error: Production validation failed: replace development placeholder values before starting in production.
+    at validateStartupConfig (/home/louis/corvanta/corvanta-backend/src/config/config.js:101:15)
+    at Object.<anonymous> (/home/louis/corvanta/corvanta-backend/src/config/config.js:107:1)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at require (node:internal/modules/helpers:147:16)
+    at Object.<anonymous> (/home/louis/corvanta/corvanta-backend/app.js:6:16)
+
+Node.js v22.23.2
+[nodemon] app crashed - waiting for file changes before starting...
+[nodemon] restarting due to changes...
+[nodemon] starting `node server.js`
+◇ injected env (30) from .env // tip: ⌘ enable debugging { debug: true }
+/home/louis/corvanta/corvanta-backend/src/config/config.js:132
+        throw new Error(
+        ^
+
+Error: Production validation failed: JWT_ACCESS_SECRET must be configured with a real value.
+    at validateStartupConfig (/home/louis/corvanta/corvanta-backend/src/config/config.js:132:15)
+    at Object.<anonymous> (/home/louis/corvanta/corvanta-backend/src/config/config.js:149:1)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at require (node:internal/modules/helpers:147:16)
+    at Object.<anonymous> (/home/louis/corvanta/corvanta-backend/app.js:6:16)
+
+Node.js v22.23.2
+[nodemon] app crashed - waiting for file changes before starting...
+^C
+louis@louis-X550CA:~/corvanta/corvanta-backend$ ^C
+louis@louis-X550CA:~/corvanta/corvanta-backend$ npm run dev
+
+> corvanta-backend@1.0.0 dev
+> NODE_OPTIONS=--openssl-legacy-provider nodemon server.js
+
+[nodemon] 3.1.14
+[nodemon] to restart at any time, enter `rs`
+[nodemon] watching path(s): *.*
+[nodemon] watching extensions: js,mjs,cjs,json
+[nodemon] starting `node server.js`
+◇ injected env (30) from .env // tip: ⌘ enable debugging { debug: true }
+{"timestamp":"2026-09-24T08:43:17.233Z","level":"info","message":"MongoDB connected successfully."}
+{"timestamp":"2026-09-24T08:43:17.242Z","level":"info","message":"Corvanta backend listening on port 5000"}
+^C{"timestamp":"2026-09-24T08:43:42.960Z","level":"info","message":"Gracefully shutting down server..."}
+{"timestamp":"2026-09-24T08:43:42.964Z","level":"info","message":"HTTP server closed."}
+
+louis@louis-X550CA:~/corvanta/corvanta-backend$ ^C
+louis@louis-X550CA:~/corvanta/corvanta-backend$ npm run dev
+
+> corvanta-backend@1.0.0 dev
+> NODE_OPTIONS=--openssl-legacy-provider nodemon server.js
+
+[nodemon] 3.1.14
+[nodemon] to restart at any time, enter `rs`
+[nodemon] watching path(s): *.*
+[nodemon] watching extensions: js,mjs,cjs,json
+[nodemon] starting `node server.js`
+◇ injected env (30) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+/home/louis/corvanta/corvanta-backend/src/config/config.js:132
+        throw new Error(
+        ^
+
+Error: Production validation failed: JWT_ACCESS_SECRET must be configured with a real value.
+    at validateStartupConfig (/home/louis/corvanta/corvanta-backend/src/config/config.js:132:15)
+    at Object.<anonymous> (/home/louis/corvanta/corvanta-backend/src/config/config.js:149:1)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at require (node:internal/modules/helpers:147:16)
+    at Object.<anonymous> (/home/louis/corvanta/corvanta-backend/app.js:6:16)
+
+Node.js v22.23.2
+[nodemon] app crashed - waiting for file changes before starting...
+^C
+louis@louis-X550CA:~/corvanta/corvanta-backend$ ^C
+louis@louis-X550CA:~/corvanta/corvanta-backend$ ^C
+louis@louis-X550CA:~/corvanta/corvanta-backend$ openssl rand -base64 64
+em1hPk75ULr0ily8dwlYrriouy0RnIKC3KOE07JN0YsNbS5HjXupl4bFAR9wX7L/
+KFIb12XjsTFLRgKSaXjJ6Q==
+louis@louis-X550CA:~/corvanta/corvanta-backend$ openssl rand -base64 64
+Uua9R1jfSyUp+Lh8BV55+5LH7N706krY19sdklqhVHAq8G0ctQPTrAzTF0he9cqH
+QMBcJuqel7MbCM5d7bh3EA==
+louis@louis-X550CA:~/corvanta/corvanta-backend$ ^C
+louis@louis-X550CA:~/corvanta/corvanta-backend$ npm run dev
+
+> corvanta-backend@1.0.0 dev
+> NODE_OPTIONS=--openssl-legacy-provider nodemon server.js
+
+[nodemon] 3.1.14
+[nodemon] to restart at any time, enter `rs`
+[nodemon] watching path(s): *.*
+[nodemon] watching extensions: js,mjs,cjs,json
+[nodemon] starting `node server.js`
+◇ injected env (30) from .env // tip: ⌘ enable debugging { debug: true }
+{"timestamp":"2026-09-24T08:52:34.244Z","level":"error","message":"MongoDB connection failed. Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/"}
+{"timestamp":"2026-09-24T08:52:34.245Z","level":"error","message":"Production startup aborted because MongoDB is unavailable."}
+[nodemon] app crashed - waiting for file changes before starting...
+^C
+louis@louis-X550CA:~/corvanta/corvanta-backend$ ^C
+louis@louis-X550CA:~/corvanta/corvanta-backend$ npm run dev
+
+> corvanta-backend@1.0.0 dev
+> NODE_OPTIONS=--openssl-legacy-provider nodemon server.js
+
+[nodemon] 3.1.14
+[nodemon] to restart at any time, enter `rs`
+[nodemon] watching path(s): *.*
+[nodemon] watching extensions: js,mjs,cjs,json
+[nodemon] starting `node server.js`
+◇ injected env (30) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+{"timestamp":"2026-09-24T08:55:57.354Z","level":"error","message":"MongoDB connection failed. Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/"}
+{"timestamp":"2026-09-24T08:55:57.357Z","level":"error","message":"Production startup aborted because MongoDB is unavailable."}
+[nodemon] app crashed - waiting for file changes before starting...
+
