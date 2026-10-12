@@ -53,8 +53,21 @@ test("non platform user gets tenant-scoped filter", () => {
 });
 
 test("platform admin gets unrestricted tenant filter", () => {
-  const filter = getTenantFilter({ companyId: "64d3a8f2c54f4020a959c9ab", roleId: { slug: "super-admin" } });
+  const filter = getTenantFilter({ companyId: "64d3a8f2c54f4020a959c9ab", roleId: { slug: "platform-admin" } });
   assert.deepEqual(filter, {});
+});
+
+test("company owner is NOT a platform admin and stays tenant-scoped", () => {
+  const { isPlatformAdmin } = require("../src/utils/tenant");
+  const owner = { companyId: "64d3a8f2c54f4020a959c9ab", roleId: { slug: "owner", permissions: ["*"] } };
+  assert.equal(isPlatformAdmin(owner), false);
+  assert.deepEqual(getTenantFilter(owner), { companyId: "64d3a8f2c54f4020a959c9ab" });
+});
+
+test("legacy super-admin slug no longer grants platform access", () => {
+  const { isPlatformAdmin } = require("../src/utils/tenant");
+  assert.equal(isPlatformAdmin({ roleId: { slug: "super-admin" } }), false);
+  assert.equal(isPlatformAdmin(null), false);
 });
 
 test("missing auth token is rejected for guarded routes", async () => {

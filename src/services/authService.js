@@ -49,7 +49,7 @@ const DEFAULT_PERMISSIONS = [
 ];
 
 async function createDefaultRole(companyId, createdById) {
-  const role = await Role.findOne({ companyId, slug: "super-admin" });
+  const role = await Role.findOne({ companyId, slug: "owner" });
 
   if (role) {
     return role;
@@ -57,8 +57,8 @@ async function createDefaultRole(companyId, createdById) {
 
   return Role.create({
     companyId,
-    name: "Super Admin",
-    slug: "super-admin",
+    name: "Owner",
+    slug: "owner",
     permissions: DEFAULT_PERMISSIONS,
     isSystem: true,
     createdBy: createdById,

@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const Role = require("../models/Role");
@@ -60,7 +61,10 @@ async function createEmployee(companyId, payload) {
     }
   }
 
-  const passwordHash = payload.password ? await bcrypt.hash(payload.password, 12) : await bcrypt.hash("TempPassword123!", 12);
+  // Never fall back to a shared, guessable password. Without an explicit password the account
+// gets a random one nobody knows, so it cannot sign in until a password is set for it.
+const rawPassword = payload.password || crypto.randomBytes(32).toString("hex");
+  const passwordHash = await bcrypt.hash(rawPassword, 12);
   const employee = await User.create({
     companyId,
     name: payload.name,

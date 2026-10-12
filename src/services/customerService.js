@@ -33,14 +33,19 @@ async function getCustomerById(companyId, customerId) {
 
 async function createCustomer(companyId, payload) {
   const scopedCompanyId = getCompanyScope(companyId);
-  const existingCustomer = await Customer.findOne({
-    ...scopedCompanyId,
-    email: payload.email ? String(payload.email).trim().toLowerCase() : "",
-    isDeleted: false,
-  });
+  const normalizedEmail = payload.email ? String(payload.email).trim().toLowerCase() : "";
 
-  if (existingCustomer) {
-    throw new AppError(409, "A customer with this email already exists in this company.");
+  // Customers without an email are allowed and must not collide with each other.
+  if (normalizedEmail) {
+    const existingCustomer = await Customer.findOne({
+      ...scopedCompanyId,
+      email: normalizedEmail,
+      isDeleted: false,
+    });
+
+    if (existingCustomer) {
+      throw new AppError(409, "A customer with this email already exists in this company.");
+    }
   }
 
   const customer = await Customer.create({
