@@ -14,6 +14,8 @@ const inboundRoutes = require("./inboundRoutes");
 const channelRoutes = require("./channelRoutes");
 const customerIdentityRoutes = require("./customerIdentityRoutes");
 const outboundRoutes = require("./outboundRoutes");
+const roleRoutes = require("./roleRoutes");
+const auditRoutes = require("./auditRoutes");
 
 const router = express.Router();
 
@@ -32,5 +34,7 @@ router.use("/webhooks", inboundRoutes);
 router.use("/channels", channelRoutes);
 router.use("/customer-identities", customerIdentityRoutes);
 router.use("/outbound", outboundRoutes);
+router.use("/roles", roleRoutes);
+router.use("/audit-logs", auditRoutes);
 
 module.exports = router;

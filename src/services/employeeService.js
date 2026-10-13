@@ -4,6 +4,7 @@ const User = require("../models/User");
 const Role = require("../models/Role");
 const AppError = require("../utils/AppError");
 const { validateObjectId } = require("../validators/commonValidator");
+const { PLATFORM_ADMIN_SLUG } = require("../utils/tenant");
 
 function getCompanyScope(companyId) {
   if (!companyId) {
@@ -56,7 +57,7 @@ async function createEmployee(companyId, payload) {
   if (payload.roleId) {
     validateObjectId(payload.roleId, "roleId");
     const role = await Role.findOne({ _id: payload.roleId, companyId });
-    if (!role) {
+    if (!role || role.slug === PLATFORM_ADMIN_SLUG) {
       throw new AppError(403, "Role not found or does not belong to your company.");
     }
   }
@@ -108,7 +109,7 @@ async function updateEmployee(companyId, userId, payload) {
   if (payload.roleId) {
     validateObjectId(payload.roleId, "roleId");
     const role = await Role.findOne({ _id: payload.roleId, companyId });
-    if (!role) {
+    if (!role || role.slug === PLATFORM_ADMIN_SLUG) {
       throw new AppError(403, "Role not found or does not belong to your company.");
     }
     employee.roleId = payload.roleId;
