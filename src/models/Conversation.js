@@ -25,6 +25,13 @@ const conversationSchema = new mongoose.Schema(
       ref: "User",
       default: [],
     }],
+    // Team member responsible for this conversation (null = unassigned).
+    assigneeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
     channelType: {
       type: String,
       enum: ["email", "whatsapp", "instagram", "messenger", "webchat", "sms", "api"],

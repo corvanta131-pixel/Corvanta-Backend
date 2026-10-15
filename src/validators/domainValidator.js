@@ -86,6 +86,15 @@ function validateConversationInput(payload = {}, { isUpdate = false } = {}) {
 
   validateOptionalString(payload.title, "Conversation title", 0, 200);
   validateEnumValue(payload.status, ["open", "waiting", "resolved", "archived"], "status");
+  validateEnumValue(payload.handlingMode, ["AI", "HUMAN", "HYBRID"], "handlingMode");
+  if (
+    payload.assigneeId !== undefined &&
+    payload.assigneeId !== null &&
+    payload.assigneeId !== "" &&
+    !mongoose.Types.ObjectId.isValid(payload.assigneeId)
+  ) {
+    throw new AppError(400, "Valid assigneeId is required.");
+  }
 }
 
 function validateMessageInput(payload = {}, { isUpdate = false, publicEndpoint = false } = {}) {

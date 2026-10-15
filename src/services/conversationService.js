@@ -114,9 +114,37 @@ async function updateConversation(companyId, conversationId, payload) {
     }
   }
   
-  const allowedFields = ["customerId", "agentId", "participantIds", "title", "status", "lastMessageAt", "metadata"];
+  const patch = { ...payload };
+
+  // Handing a conversation (back) to the AI needs an active agent that can actually answer.
+  if (patch.handlingMode === "AI" || patch.handlingMode === "HYBRID") {
+    const agentId = patch.agentId || conversation.agentId;
+    const agent = agentId
+      ? await AIAgent.findOne({ _id: agentId, companyId, status: "active", isDeleted: false }).select("_id").lean()
+      : null;
+    if (!agent) {
+      throw new AppError(409, "This conversation has no active AI agent to hand back to.");
+    }
+  }
+
+  // Assignment: a team member of THIS company who can still sign in, or null to unassign.
+  if (patch.assigneeId !== undefined) {
+    if (patch.assigneeId === null || patch.assigneeId === "") {
+      patch.assigneeId = null;
+    } else {
+      validateObjectId(patch.assigneeId, "assigneeId");
+      const assignee = await User.findOne({ _id: patch.assigneeId, companyId, status: "active", isDeleted: false })
+        .select("_id")
+        .lean();
+      if (!assignee) {
+        throw new AppError(403, "Assignee not found, inactive, or does not belong to your company.");
+      }
+    }
+  }
+
+  const allowedFields = ["customerId", "agentId", "participantIds", "title", "status", "lastMessageAt", "metadata", "handlingMode", "assigneeId"];
   for (const field of allowedFields) {
-    if (payload[field] !== undefined) conversation[field] = payload[field];
+    if (patch[field] !== undefined) conversation[field] = patch[field];
   }
   await conversation.save();
 

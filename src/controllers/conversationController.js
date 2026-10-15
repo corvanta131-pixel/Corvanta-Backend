@@ -5,6 +5,7 @@ const { logAudit } = require("../services/auditService");
 const { listConversations, getConversationById, createConversation, updateConversation, deleteConversation } = require("../services/conversationService");
 const { listMessages } = require("../services/messageService");
 const { sendConversationMessage } = require("../services/aiConversationService");
+const { sendStaffReply } = require("../services/conversationReplyService");
 const { validateMessageInput } = require("../validators/domainValidator");
 
 exports.listConversations = asyncHandler(async (req, res) => {
@@ -56,4 +57,23 @@ exports.sendConversationMessage = asyncHandler(async (req, res) => {
     req.user
   );
   res.status(201).json({ success: true, message: "Message sent successfully.", data: result });
+});
+
+exports.replyToConversation = asyncHandler(async (req, res) => {
+  validateObjectId(req.params.conversationId, "conversationId");
+  const message = await sendStaffReply(
+    req.user.companyId,
+    req.params.conversationId,
+    req.body && req.body.body,
+    req.user
+  );
+  await logAudit({
+    user: req.user,
+    companyId: req.user.companyId,
+    action: "conversation.reply.sent",
+    entityType: "Conversation",
+    entityId: String(req.params.conversationId),
+    metadata: { messageId: String(message._id) },
+  });
+  res.status(201).json({ success: true, message: "Reply sent.", data: message });
 });

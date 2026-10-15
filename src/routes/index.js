@@ -16,6 +16,7 @@ const customerIdentityRoutes = require("./customerIdentityRoutes");
 const outboundRoutes = require("./outboundRoutes");
 const roleRoutes = require("./roleRoutes");
 const auditRoutes = require("./auditRoutes");
+const widgetRoutes = require("./widgetRoutes");
 
 const router = express.Router();
 
@@ -36,5 +37,6 @@ router.use("/customer-identities", customerIdentityRoutes);
 router.use("/outbound", outboundRoutes);
 router.use("/roles", roleRoutes);
 router.use("/audit-logs", auditRoutes);
+router.use("/widget", widgetRoutes);
 
 module.exports = router;

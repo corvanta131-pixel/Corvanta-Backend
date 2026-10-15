@@ -10,6 +10,7 @@ const {
   getConnectionStatus,
   retryChannelConnection,
 } = require("../controllers/channelController");
+const { getWidgetSettings, saveWidgetSettings } = require("../controllers/widgetController");
 const { protect, requiresPermission } = require("../middleware/auth");
 
 const router = express.Router();
@@ -24,5 +25,7 @@ router.post("/:id/connect", requiresPermission("channels:update"), connectChanne
 router.post("/:id/disconnect", requiresPermission("channels:update"), disconnectChannel);
 router.get("/:id/connection", requiresPermission("channels:read"), getConnectionStatus);
 router.post("/:id/retry", requiresPermission("channels:update"), retryChannelConnection);
+router.get("/:id/widget", requiresPermission("channels:read"), getWidgetSettings);
+router.put("/:id/widget", requiresPermission("channels:update"), saveWidgetSettings);
 
 module.exports = router;
