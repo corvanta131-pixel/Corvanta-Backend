@@ -3,10 +3,15 @@ const { validateAIAgentInput } = require("../validators/domainValidator");
 const { validateObjectId } = require("../validators/commonValidator");
 const { logAudit } = require("../services/auditService");
 const { listAgents, getAgentById, createAgent, updateAgent, deleteAgent } = require("../services/agentService");
+const { getAgentOptions } = require("../services/agentOptionsService");
 
 exports.listAgents = asyncHandler(async (req, res) => {
   const agents = await listAgents(req.user.companyId, req.query || {});
   res.status(200).json({ success: true, data: agents });
+});
+
+exports.getAgentOptions = asyncHandler(async (req, res) => {
+  res.status(200).json({ success: true, data: getAgentOptions() });
 });
 
 exports.getAgent = asyncHandler(async (req, res) => {

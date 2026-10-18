@@ -116,6 +116,7 @@ function validateMessageInput(payload = {}, { isUpdate = false, publicEndpoint =
 function validateKnowledgeSearchInput(payload = {}) {
   rejectProtectedFieldOverrides(payload);
   validateRequiredString(payload.query, "Search query", 1, 2000);
+  validateEnumValue(payload.mode, ["keyword", "semantic"], "mode");
   if (payload.knowledgeBaseIds !== undefined && !Array.isArray(payload.knowledgeBaseIds)) {
     throw new AppError(400, "knowledgeBaseIds must be an array.");
   }

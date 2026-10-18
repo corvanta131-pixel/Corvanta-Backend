@@ -3,6 +3,7 @@ const KnowledgeBase = require("../models/KnowledgeBase");
 const User = require("../models/User");
 const AppError = require("../utils/AppError");
 const { validateObjectId } = require("../validators/commonValidator");
+const KnowledgeChunk = require("../models/KnowledgeChunk");
 
 function getCompanyScope(companyId) {
   if (!companyId) throw new AppError(403, "Missing company context.");
@@ -99,6 +100,8 @@ async function deleteKnowledgeDocument(companyId, documentId) {
   document.indexingState = "unindexed";
   document.chunkCount = 0;
   await document.save();
+  // A deleted document must not stay searchable: remove its stored text chunks too.
+  await KnowledgeChunk.deleteMany({ companyId, knowledgeDocumentId: document._id });
   return document;
 }
 

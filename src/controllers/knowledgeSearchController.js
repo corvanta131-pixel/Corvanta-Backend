@@ -23,7 +23,8 @@ exports.searchKnowledgeBases = asyncHandler(async (req, res) => {
     query: req.body.query,
     knowledgeBaseIds,
     limit: req.body.limit,
-    options: { useSemantic: true },
+    // "keyword" matches what the website chat uses; "semantic" needs indexed documents and an embedding provider.
+    options: { useSemantic: req.body.mode !== "keyword" },
   });
   res.status(200).json({ success: true, data: results });
 });
