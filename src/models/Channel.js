@@ -44,6 +44,18 @@ const channelSchema = new mongoose.Schema(
       welcomeMessage: { type: String },
       color: { type: String },
     },
+    // Messaging-provider connection (WhatsApp, Messenger, Instagram, SMS, email). Written ONLY by
+    // connectorService; the generic channel endpoints whitelist their own fields. `credentials` is
+    // AES-256-GCM encrypted and never selected by default or returned by any API.
+    connector: {
+      webhookKey: { type: String },
+      verifyToken: { type: String },
+      credentials: { type: String, select: false },
+      display: { type: Object, default: undefined },
+      agentId: { type: mongoose.Schema.Types.ObjectId, ref: "AIAgent", default: undefined },
+      aiReplies: { type: Boolean, default: undefined },
+      lastTest: { type: Object, default: undefined },
+    },
     isDeleted: {
       type: Boolean,
       default: false,
@@ -59,6 +71,7 @@ const channelSchema = new mongoose.Schema(
 
 channelSchema.index({ companyId: 1, type: 1, isDeleted: false }, { unique: true, partialFilterExpression: { isDeleted: false } });
 
+channelSchema.index({ "connector.webhookKey": 1 }, { unique: true, sparse: true, name: "connector_webhook_key_unique" });
 channelSchema.index({ "widget.key": 1 }, { unique: true, sparse: true, name: "widget_key_unique" });
 
 module.exports = mongoose.model("Channel", channelSchema);

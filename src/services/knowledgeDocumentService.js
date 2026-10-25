@@ -2,8 +2,8 @@ const KnowledgeDocument = require("../models/KnowledgeDocument");
 const KnowledgeBase = require("../models/KnowledgeBase");
 const User = require("../models/User");
 const AppError = require("../utils/AppError");
-const { validateObjectId } = require("../validators/commonValidator");
 const KnowledgeChunk = require("../models/KnowledgeChunk");
+const { validateObjectId } = require("../validators/commonValidator");
 
 function getCompanyScope(companyId) {
   if (!companyId) throw new AppError(403, "Missing company context.");

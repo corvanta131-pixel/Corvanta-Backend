@@ -29,7 +29,8 @@ function query(result) {
 }
 
 const calls = { messageCreate: [], updateOne: [], workflow: 0 };
-const state = { conversation: null, agent: null, user: null, lastAgentQuery: null, lastUserQuery: null };
+const state = { conversation: null, agent: null, user: null, lastAgentQuery: null, lastUserQuery: null, refetched: null };
+const delivery = { result: null, calls: [] };
 
 stub("models/Conversation.js", {
   findOne: async () => state.conversation,
@@ -39,12 +40,20 @@ stub("models/Conversation.js", {
   },
 });
 stub("models/Message.js", {
+  findOne: () => query(() => state.refetched),
   create: async (doc) => {
     calls.messageCreate.push(doc);
     return { _id: "64d3a8f2c54f4020a959c9m1".replace("m", "0"), createdAt: new Date("2025-01-01"), ...doc, toObject() { return { ...doc, _id: "msg-1" }; } };
   },
 });
 stub("models/Customer.js", { findOne: () => query(null) });
+// Channel delivery (WhatsApp, SMS, ...) has its own tests; here it is a controllable boundary.
+stub("services/connectors/inboundService.js", {
+  deliverStaffReply: async (...args) => {
+    delivery.calls.push(args);
+    return delivery.result;
+  },
+});
 stub("models/AIAgent.js", {
   findOne: (q) => {
     state.lastAgentQuery = q;
@@ -89,6 +98,9 @@ function reset() {
   calls.messageCreate.length = 0;
   calls.updateOne.length = 0;
   calls.workflow = 0;
+  delivery.result = null;
+  delivery.calls.length = 0;
+  state.refetched = null;
   state.conversation = conversationDoc();
   state.agent = { _id: AGENT };
   state.user = { _id: COLLEAGUE };
@@ -223,4 +235,37 @@ test("an update does not mutate the caller's payload", async () => {
   const payload = { assigneeId: "" };
   await updateConversation(COMPANY, CONVERSATION, payload);
   assert.deepEqual(payload, { assigneeId: "" });
+});
+
+test("replies on an external channel are delivered, and the result is returned honestly", async () => {
+  reset();
+  state.conversation = conversationDoc({ channelType: "sms" });
+  delivery.result = { deliveryStatus: "failed", deliveryError: "The 'To' number is not valid" };
+  state.refetched = {
+    _id: "msg-1",
+    companyId: COMPANY,
+    conversationId: CONVERSATION,
+    senderType: "user",
+    body: "On our way",
+    direction: "outbound",
+    channelType: "sms",
+    deliveryStatus: "failed",
+    deliveryError: "The 'To' number is not valid",
+  };
+  const result = await sendStaffReply(COMPANY, CONVERSATION, "On our way", staff);
+
+  assert.equal(calls.messageCreate.length, 1, "the reply is saved first, whatever happens next");
+  assert.equal(delivery.calls.length, 1);
+  assert.equal(delivery.calls[0][0], COMPANY);
+  assert.equal(result.delivery.status, "failed");
+  assert.equal(result.delivery.error, "The 'To' number is not valid");
+  assert.equal(result.delivery.channelType, "sms");
+});
+
+test("website-chat replies carry no delivery information", async () => {
+  reset();
+  state.conversation = conversationDoc({ channelType: "webchat" });
+  delivery.result = null;
+  const result = await sendStaffReply(COMPANY, CONVERSATION, "Hello", staff);
+  assert.equal("delivery" in result, false);
 });

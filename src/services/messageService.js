@@ -48,6 +48,11 @@ function publicMessage(message) {
     createdAt: value.createdAt,
     updatedAt: value.updatedAt,
     metadata: safeMetadata,
+    // Only for messages that were sent through an external channel (WhatsApp, SMS, email, ...).
+    // `deliveryStatus` defaults to "pending" on every message, so it is not exposed for the rest.
+    ...(value.direction === "outbound" && value.channelType && value.channelType !== "webchat"
+      ? { delivery: { status: value.deliveryStatus, error: value.deliveryError || null, channelType: value.channelType } }
+      : {}),
   };
 }
 
